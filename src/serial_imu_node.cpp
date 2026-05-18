@@ -111,12 +111,16 @@ class SerialImuNode : public rclcpp::Node
         msg.linear_acceleration.x = valores[0];
         msg.linear_acceleration.y = valores[1];
         msg.linear_acceleration.z = valores[2];
+        msg.linear_acceleration_covariance[0] = -1;
         msg.angular_velocity.x = valores[3];
         msg.angular_velocity.y = valores[4];
         msg.angular_velocity.z = valores[5];
+        msg.angular_velocity_covariance[0] = -1;
         msg.orientation.x = valores[6];
         msg.orientation.y = valores[7];
         msg.orientation.z = valores[8]; //compõe a mensagem
+        msg.orientation_covariance[0] = -1;
+
 
         msg.header.stamp = this->now();
 
