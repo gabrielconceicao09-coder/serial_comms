@@ -105,7 +105,7 @@ class SerialImuNode : public rclcpp::Node
         }
         
         sensor_msgs::msg::Imu msg;
-        msg.header.stamp = this->now();
+        
         msg.header.frame_id = "imu_link";
 
         msg.linear_acceleration.x = valores[0];
@@ -117,6 +117,8 @@ class SerialImuNode : public rclcpp::Node
         msg.orientation.x = valores[6];
         msg.orientation.y = valores[7];
         msg.orientation.z = valores[8]; //compõe a mensagem
+
+        msg.header.stamp = this->now();
 
         imu_pub_->publish(msg); //publica as medições do MPU
     }
