@@ -16,7 +16,7 @@ class SerialImuNode : public rclcpp::Node
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 115200);
 
-        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("imu", 10);
+        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
 
         try
         {
@@ -45,7 +45,7 @@ class SerialImuNode : public rclcpp::Node
         
         
 
-        timer_ = this->create_wall_timer(10ms, std::bind(&SerialImuNode::ReadPub_callback, this));
+        timer_ = this->create_wall_timer(5ms, std::bind(&SerialImuNode::ReadPub_callback, this));
         RCLCPP_INFO(this->get_logger(), "Timer criado com callback");        
     }
 
