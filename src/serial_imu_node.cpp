@@ -94,7 +94,7 @@ class SerialImuNode : public rclcpp::Node
         }
         catch (...)
         {
-            RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double: %s", line.c_str());
+            RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double: %s", item.c_str());
             return;
         }
 
