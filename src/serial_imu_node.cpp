@@ -14,7 +14,7 @@ class SerialImuNode : public rclcpp::Node
     SerialImuNode() : Node("serial_imu_node") 
     {
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
-        baudrate_ = this->declare_parameter<int>("baudrate", 115200);
+        baudrate_ = this->declare_parameter<int>("baudrate", 921600);
 
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
 
