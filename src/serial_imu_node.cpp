@@ -69,6 +69,7 @@ class SerialImuNode : public rclcpp::Node
         
         if (!serial_.available())
         {
+            RCLCPP_WARN(this->get_logger(), "Serial não disponível");
             return; //Retorna pra q seja tentado novamente
         }
         
@@ -123,8 +124,14 @@ class SerialImuNode : public rclcpp::Node
 
 
         msg.header.stamp = this->now();
-
-        imu_pub_->publish(msg); //publica as medições do MPU
+        try {
+            imu_pub_->publish(msg); //publica as medições do MPU
+        }
+        catch (...)
+        {
+            RCLCPP_WARN(this->get_logger(), "Mensagem não publicada");
+        }
+            
     }
 };
 
