@@ -123,7 +123,7 @@ class SerialImuNode : public rclcpp::Node
         msg.orientation_covariance[0] = -1;
 
 
-        msg.header.stamp = this->now();
+        msg.header.stamp = this->now() + rclcpp::Duration(0, 10000000);
         try {
             imu_pub_->publish(msg); //publica as medições do MPU
         }
