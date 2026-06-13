@@ -64,9 +64,9 @@ class SerialImuNode : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr timer_;
 
     //Variáveis para ajuste temporal das mensagens IMU
-    rclcpp::Time proximo_tempo;
+    rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    int passo_de_tempo = 2000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms)
+    const int64_t passo_ideal = 2000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms)
 
     void ReadPub_callback()
     {
@@ -127,13 +127,20 @@ class SerialImuNode : public rclcpp::Node
         msg.orientation.z = valores[8]; //compõe a mensagem
         msg.orientation_covariance[0] = -1;
 
+        rclcpp::Time tempo_atual_ros = this->now();
         if (primeira_leitura){
-            proximo_tempo = this->now();
+            tempo_conformado = this->now();
             primeira_leitura = false;
         }
-
-        msg.header.stamp = proximo_tempo;
-        proximo_tempo += rclcpp::Duration(0, passo_de_tempo);
+        else {
+            tempo_conformado += rclcpp::Duration(0, passo_ideal);
+            int64_t erro_tempo_ns = tempo_atual_ros.nanoseconds() - tempo_conformado.nanoseconds();
+            if (std::abs(erro_tempo_ns) > passo_ideal/2){
+                proximo_tempo += rclcpp::Duration(0, 0.1*erro_tempo_ns); //Ajuste suave do drift temporal
+            }
+        }
+        msg.header.stamp = tempo_conformado;
+        
         try {
             imu_pub_->publish(msg); //publica as medições do MPU
         }
