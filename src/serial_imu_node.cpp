@@ -63,6 +63,11 @@ class SerialImuNode : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
+    //Variáveis para ajuste temporal das mensagens IMU
+    rclcpp::Time proximo_tempo;
+    bool primeira_leitura = true;
+    int passo_de_tempo = 2000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms)
+
     void ReadPub_callback()
     {
         RCLCPP_INFO(this->get_logger(), "ReadPub_callback() chamado");
@@ -122,8 +127,13 @@ class SerialImuNode : public rclcpp::Node
         msg.orientation.z = valores[8]; //compõe a mensagem
         msg.orientation_covariance[0] = -1;
 
+        if (primeira_leitura){
+            proximo_tempo = this->now();
+            primeira_leitura = false;
+        }
 
-        msg.header.stamp = this->now() + rclcpp::Duration(0, 10000000);
+        msg.header.stamp = proximo_tempo;
+        proximo_tempo += rclcpp::Duration(0, passo_de_tempo);
         try {
             imu_pub_->publish(msg); //publica as medições do MPU
         }
