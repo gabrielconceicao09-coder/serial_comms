@@ -136,7 +136,7 @@ class SerialImuNode : public rclcpp::Node
             tempo_conformado += rclcpp::Duration(0, passo_ideal);
             int64_t erro_tempo_ns = tempo_atual_ros.nanoseconds() - tempo_conformado.nanoseconds();
             if (std::abs(erro_tempo_ns) > passo_ideal/2){
-                proximo_tempo += rclcpp::Duration(0, 0.1*erro_tempo_ns); //Ajuste suave do drift temporal
+                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns); //Ajuste suave do drift temporal
             }
         }
         msg.header.stamp = tempo_conformado;
