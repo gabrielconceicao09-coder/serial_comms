@@ -66,7 +66,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens IMU
     rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    const int64_t passo_ideal = 10*1000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms, 100 Hz => 10ms)
+    const int64_t passo_ideal = 5*1000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms, 100 Hz => 10ms)
 
     void ReadPub_callback()
     {
