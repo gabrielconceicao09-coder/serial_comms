@@ -194,7 +194,7 @@ class SerialImuNode : public rclcpp::Node
             RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
         }
         //-----------------------------------------------------------------
-
+        /*
         //Composição da mensagem NavSatFix (GPS):
         auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
         gpsMsg->header.stamp = tempo_atual_ros;
@@ -226,7 +226,7 @@ class SerialImuNode : public rclcpp::Node
         sensor_msgs::PointCloud2Modifier modificador(*sonarPc2Msg); 
         modificador.setPointCloud2FieldsByString(1, "xyz");
         modificador.resize(sonares_.size());
-
+        */
         /*//Iteradores para preencher cada campo da PointCloud2:
         sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
         sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
