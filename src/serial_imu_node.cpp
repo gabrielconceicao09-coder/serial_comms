@@ -229,7 +229,7 @@ class SerialImuNode : public rclcpp::Node
         modificador.setPointCloud2FieldsByString(1, "xyz");
         modificador.resize(sonares_.size());
 
-        //Iteradores para preencher cada campo da PointCloud2:
+        /*//Iteradores para preencher cada campo da PointCloud2:
         sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
         sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
         sensor_msgs::PointCloud2Iterator<float> iter_z(*sonarPc2Msg, "z");
@@ -253,7 +253,7 @@ class SerialImuNode : public rclcpp::Node
         try {sonar_pub_->publish(*sonarPc2Msg);}
         catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem sonares não publicada");}
         //--------------------------------------------------------------------------------
-
+        */
     }
 };
 
