@@ -154,19 +154,24 @@ class SerialImuNode : public rclcpp::Node
         }
         //----------------------------------------------------------------------------
         
-        rclcpp::Time tempo_atual_ros = this->now();
-        passo_ideal = 1000000000/imu_freq_ideal_;
+        //Tempo atual na referência do sistema
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        rclcpp::Time tempo_atual(ts.tv_sec, ts.tv_nsec, RCL_SYSTEM_TIME);
+
         //Composição da mensagem Imu:
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
 
+        passo_ideal = 1000000000/imu_freq_ideal_;
+
         if (primeira_leitura){
-            tempo_conformado = this->now();
+            tempo_conformado = tempo_atual;
             primeira_leitura = false;
         }
         else {
             tempo_conformado += rclcpp::Duration(0, passo_ideal);
-            int64_t erro_tempo_ns = tempo_atual_ros.nanoseconds() - tempo_conformado.nanoseconds();
+            int64_t erro_tempo_ns = tempo_atual.nanoseconds() - tempo_conformado.nanoseconds();
             if (std::abs(erro_tempo_ns) > passo_ideal/2){
                 tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns);
             }
@@ -197,7 +202,7 @@ class SerialImuNode : public rclcpp::Node
         
         //Composição da mensagem NavSatFix (GPS):
         auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
-        gpsMsg->header.stamp = tempo_atual_ros;
+        gpsMsg->header.stamp = tempo_atual;
         gpsMsg->header.frame_id = "gps_link";
 
         //Status do gps:
@@ -219,7 +224,7 @@ class SerialImuNode : public rclcpp::Node
         //Composição da mensagem PointCloud2 (Sonar):
         auto sonarPc2Msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
-        sonarPc2Msg->header.stamp = tempo_atual_ros;
+        sonarPc2Msg->header.stamp = tempo_atual;
         sonarPc2Msg->header.frame_id = "base_link";
 
         //Modificador para alocação de memória e organização da mensagem PointCloud2
