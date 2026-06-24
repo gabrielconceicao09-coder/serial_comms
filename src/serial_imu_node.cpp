@@ -209,9 +209,7 @@ class SerialImuNode : public rclcpp::Node
         gpsMsg->latitude = 1.0; //graus
         gpsMsg->longitude = 1.0; //graus
         gpsMsg->altitude = 1.0; //metro
-        gpsMsg->position_covariance = [0.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.0]; //Covariância das medidas do gps
+        gpsMsg->position_covariance = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; //Covariância das medidas do gps
         gpsMsg->position_covariance_type = 0;//COVARIANCE_TYPE_UNKNOWN;
 
         try {gps_pub_->publish(*gpsMsg);}
