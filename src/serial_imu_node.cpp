@@ -113,7 +113,8 @@ class SerialImuNode : public rclcpp::Node
     void ReadPub_callback()
     {
         RCLCPP_INFO(this->get_logger(), "ReadPub_callback() chamado");
-        
+
+        //Leitura da porta serial:
         if (!serial_.available())
         {
             RCLCPP_WARN(this->get_logger(), "Serial não disponível");
@@ -151,6 +152,7 @@ class SerialImuNode : public rclcpp::Node
             RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores");
             return; 
         }
+        //----------------------------------------------------------------------------
         
         rclcpp::Time tempo_atual_ros = this->now();
 
