@@ -1,16 +1,16 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-#include "sensor_msgs/msg/nav_sat_fix.hpp"
-#include "sensor_msgs/msg/nav_sat_status.hpp"
-#include "sensor_msgs/msg/point_cloud2.hpp"
-#include "sensor_msgs/point_cloud2_iterator.hpp"
+//#include "sensor_msgs/msg/nav_sat_fix.hpp"
+//#include "sensor_msgs/msg/nav_sat_status.hpp"
+//#include "sensor_msgs/msg/point_cloud2.hpp"
+//#include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "serial/serial.h"
 
 #include <string>
 #include <sstream>
 #include <vector>
-#include <cmath>
-#include <chrono>
+//#include <cmath>
+//#include <chrono>
 
 //Struct de alcance máx. e mín., posição e ângulo relativo dos sonares para cálculo da PointCloud2:
 struct ConfigSonar{
