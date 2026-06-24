@@ -33,14 +33,14 @@ class SerialImuNode : public rclcpp::Node
 
         imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
         imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
-        gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
-        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+        //gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
+        //sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
 
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(imu_topic_, rclcpp::SensorDataQoS());
-        gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
-        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        //gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
+        //sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
 
-        //Structs para cada um dos sonares
+        /*//Structs para cada um dos sonares
         sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
         sonar2_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar2_config", {1.0, 1.0, 0.0, 2.0, 1.0});
         sonar3_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar3_config", {1.0, 1.0, 0.0, 2.0, 1.0});
@@ -51,7 +51,7 @@ class SerialImuNode : public rclcpp::Node
         sonares_.push_back(sonar2_config_);
         sonares_.push_back(sonar3_config_);
         sonares_.push_back(sonar4_config_);
-        sonares_.push_back(sonar5_config_);
+        sonares_.push_back(sonar5_config_);*/
 
         try
         {
@@ -91,17 +91,17 @@ class SerialImuNode : public rclcpp::Node
 
     private:
     //Parâmetros:
-    std::string port_, imu_topic_, gps_topic_, sonar_topic_;
+    std::string port_, imu_topic_;//, gps_topic_, sonar_topic_;
     int baudrate_, imu_freq_ideal_;
-    ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
-    std::vector<ConfigSonar> sonares_;
+    //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
+    //std::vector<ConfigSonar> sonares_;
 
     serial::Serial serial_;
 
     //Publishers:
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
+    //rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
