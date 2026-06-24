@@ -163,7 +163,7 @@ class SerialImuNode : public rclcpp::Node
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
 
-        passo_ideal = 1000000000/imu_freq_ideal_;
+        this->passo_ideal = 1000000000/imu_freq_ideal_;
 
         if (primeira_leitura){
             tempo_conformado = tempo_atual;
