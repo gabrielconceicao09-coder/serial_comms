@@ -1,10 +1,25 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/navsatfix.hpp"
+#include "sensor_msgs/msg/navsatstatus.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "serial/serial.h"
 
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cmath>
+#include <chrono>
+
+//Struct de alcance máx. e mín., posição e ângulo relativo dos sonares para cálculo da PointCloud2:
+struct ConfigSonar{
+    float x; //metros
+    float y;
+    float angulo_rel; //rad
+    float max_alc; //metros
+    float min_alc;
+};
 
 using namespace std::chrono_literals;
 
@@ -16,7 +31,27 @@ class SerialImuNode : public rclcpp::Node
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
 
-        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("imu", rclcpp::SensorDataQoS());
+        imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
+        imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
+        gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
+        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+
+        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(imu_topic_, rclcpp::SensorDataQoS());
+        gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
+        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+
+        //Structs para cada um dos sonares
+        sonar1_config_ = this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar2_config_ = this->declare_parameter<ConfigSonar>("sonar2_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar3_config_ = this->declare_parameter<ConfigSonar>("sonar3_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar4_config_ = this->declare_parameter<ConfigSonar>("sonar4_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar5_config_ = this->declare_parameter<ConfigSonar>("sonar5_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+
+        sonares_.push_back(sonar1_config_);
+        sonares_.push_back(sonar2_config_);
+        sonares_.push_back(sonar3_config_);
+        sonares_.push_back(sonar4_config_);
+        sonares_.push_back(sonar5_config_);
 
         try
         {
@@ -55,18 +90,25 @@ class SerialImuNode : public rclcpp::Node
     }
 
     private:
-    std::string port_;
-    int baudrate_;
+    //Parâmetros:
+    std::string port_, imu_topic_, gps_topic_, sonar_topic_;
+    int baudrate_, imu_freq_ideal_;
+    ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
+    std::vector<ConfigSonar> sonares_;
 
     serial::Serial serial_;
 
+    //Publishers:
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
+
     rclcpp::TimerBase::SharedPtr timer_;
 
     //Variáveis para ajuste temporal das mensagens IMU
     rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    const int64_t passo_ideal = 5*1000000; //período ideal de amostragem, em nanossegundos, para frequência de amostragem observada (Ex: 500 Hz => 2ms, 100 Hz => 10ms)
+    const int64_t passo_ideal = 1000000/imu_freq_ideal_; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
 
     void ReadPub_callback()
     {
@@ -100,7 +142,7 @@ class SerialImuNode : public rclcpp::Node
         }
         catch (...)
         {
-            RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double: %s", item.c_str());
+            RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double (IMU): %s", item.c_str());
             return;
         }
 
@@ -110,45 +152,106 @@ class SerialImuNode : public rclcpp::Node
             return; 
         }
         
-        sensor_msgs::msg::Imu msg;
-        
-        msg.header.frame_id = "imu_link";
-
-        msg.linear_acceleration.x = valores[0];
-        msg.linear_acceleration.y = valores[1];
-        msg.linear_acceleration.z = valores[2];
-        msg.linear_acceleration_covariance[0] = -1;
-        msg.angular_velocity.x = valores[3];
-        msg.angular_velocity.y = valores[4];
-        msg.angular_velocity.z = valores[5];
-        msg.angular_velocity_covariance[0] = -1;
-        msg.orientation.x = valores[6];
-        msg.orientation.y = valores[7];
-        msg.orientation.z = valores[8]; //compõe a mensagem
-        msg.orientation_covariance[0] = -1;
-
         rclcpp::Time tempo_atual_ros = this->now();
+
+        //Composição da mensagem Imu:
+        auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
+        imuMsg->header.frame_id = "imu_link";
+
         if (primeira_leitura){
             tempo_conformado = this->now();
             primeira_leitura = false;
         }
         else {
             tempo_conformado += rclcpp::Duration(0, passo_ideal);
-            int64_t erro_tempo_ns = tempo_atual_ros.nanoseconds() - tempo_conformado.nanoseconds();
-            if (std::abs(erro_tempo_ns) > passo_ideal/2){
-                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns); //Ajuste suave do drift temporal
+            int64_t erro_tempo_us = tempo_atual_ros.microseconds() - tempo_conformado.microseconds();
+            if (std::abs(erro_tempo_us) > passo_ideal/2){
+                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_us);
             }
         }
-        msg.header.stamp = tempo_conformado;
+        imuMsg->header.stamp = tempo_conformado;
+
+        imuMsg->linear_acceleration.x = valores[0];
+        imuMsg->linear_acceleration.y = valores[1];
+        imuMsg->linear_acceleration.z = valores[2];
+        imuMsg->linear_acceleration_covariance[0] = -1;
+        imuMsg->angular_velocity.x = valores[3];
+        imuMsg->angular_velocity.y = valores[4];
+        imuMsg->angular_velocity.z = valores[5];
+        imuMsg->angular_velocity_covariance[0] = -1;
+        imuMsg->orientation.x = valores[6];
+        imuMsg->orientation.y = valores[7];
+        imuMsg->orientation.z = valores[8]; //compõe a mensagem
+        imuMsg->orientation_covariance[0] = -1;
         
         try {
-            imu_pub_->publish(msg); //publica as medições do MPU
+            imu_pub_->publish(*imuMsg); //publica as medições do MPU
         }
         catch (...)
         {
-            RCLCPP_WARN(this->get_logger(), "Mensagem não publicada");
+            RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
         }
-            
+        //-----------------------------------------------------------------
+
+        //Composição da mensagem NavSatFix (GPS):
+        auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
+        gpsMsg->header.stamp = tempo_atual_ros;
+        gpsMsg->header.frame_id = "gps_link";
+
+        //Status do gps:
+        auto gpsStatusMsg = std::make_shared<sensor_msgs::msg::NavSatStatus>();
+        gpsStatusMsg->status = STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
+        gpsStatusMsg->service = SERVICE_GPS; //Define o serviço que o gps tá usando
+        gpsMsg->status = gpsStatusMsg;
+
+        gpsMsg->latitude = 1.0; //graus
+        gpsMsg->longitude = 1.0; //graus
+        gpsMsg->altitude = 1.0; //metro
+        gpsMsg->position_covariance = [0.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0]; //Covariância das medidas do gps
+        gpsMsg->position_covariance_type = COVARIANCE_TYPE_UNKNOWN;
+
+        try {gps_pub_->publish(*gpsMsg);}
+        catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
+        //-----------------------------------------------------------------
+
+        //Composição da mensagem PointCloud2 (Sonar):
+        auto sonarPc2Msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+        sonarPc2Msg->header.stamp = tempo_atual_ros;
+        sonarPc2Msg->header.frame_id = "base_link";
+
+        //Modificador para alocação de memória e organização da mensagem PointCloud2
+        sensor_msgs::PointCloud2Modifier modificador(*sonarPc2Msg); 
+        modificador.setPointCloud2FieldsByString(1, "xyz");
+        modificador.resize(sonares_.size());
+
+        //Iteradores para preencher cada campo da PointCloud2:
+        sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
+        sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
+        sensor_msgs::PointCloud2Iterator<float> iter_z(*sonarPc2Msg, "z");
+        
+        //Calcula a posição x e y do ponto a adicionar na PointCloud2 para as medidas de cada sonar
+        for (size_t i; i < sonares_.size(); i++){
+            float dist = 1.0 //recebe distância de cada sonar de acordo com índice i
+            ConfigSonar config = sonares_[i];
+            if (dist >= config.min_alc && dist <= config.max_alc) {
+                *iter_x = config.x + dist*std::cos(config.angulo_rel);
+                *iter_y = config.y + dist*std::sin(config.angulo_rel);
+                *iter_z = 0.0;
+            } else {
+                *iter_x = std::numeric_limits::quiet_NaN();
+                *iter_y = std::numeric_limits::quiet_NaN();
+                *iter_z = std::numeric_limits::quiet_NaN();
+            }
+
+            iter_x ++; iter_y ++; iter_z ++;
+        }
+        try {sonar_pub_->publish(*sonarPc2Msg);}
+        catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem sonares não publicada");}
+        //--------------------------------------------------------------------------------
+
     }
 };
 
