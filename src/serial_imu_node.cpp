@@ -237,7 +237,7 @@ class SerialImuNode : public rclcpp::Node
         //Calcula a posição x e y do ponto a adicionar na PointCloud2 para as medidas de cada sonar
         for (size_t i; i < sonares_.size(); i++){
             float dist = 1.0 //recebe distância de cada sonar de acordo com índice i
-            ConfigSonar config = sonares_[i];
+            auto& config = sonares_[i];
             if (dist >= config.min_alc && dist <= config.max_alc) {
                 *iter_x = config.x + dist*std::cos(config.angulo_rel);
                 *iter_y = config.y + dist*std::sin(config.angulo_rel);
