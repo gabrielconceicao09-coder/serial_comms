@@ -1,16 +1,16 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-//#include "sensor_msgs/msg/nav_sat_fix.hpp"
-//#include "sensor_msgs/msg/nav_sat_status.hpp"
-//#include "sensor_msgs/msg/point_cloud2.hpp"
-//#include "sensor_msgs/point_cloud2_iterator.hpp"
+#include "sensor_msgs/msg/nav_sat_fix.hpp"
+#include "sensor_msgs/msg/nav_sat_status.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "serial/serial.h"
 
 #include <string>
 #include <sstream>
 #include <vector>
-//#include <cmath>
-//#include <chrono>
+#include <cmath>
+#include <chrono>
 
 //Struct de alcance máx. e mín., posição e ângulo relativo dos sonares para cálculo da PointCloud2:
 struct ConfigSonar{
@@ -33,12 +33,12 @@ class SerialImuNode : public rclcpp::Node
 
         imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
         imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
-        //gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
-        //sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+        gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
+        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
 
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(imu_topic_, rclcpp::SensorDataQoS());
-        //gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
-        //sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
+        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
 
         /*//Structs para cada um dos sonares
         sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
@@ -51,8 +51,8 @@ class SerialImuNode : public rclcpp::Node
         sonares_.push_back(sonar2_config_);
         sonares_.push_back(sonar3_config_);
         sonares_.push_back(sonar4_config_);
-        sonares_.push_back(sonar5_config_);*/
-
+        sonares_.push_back(sonar5_config_);
+        */
         try
         {
             serial_.setPort(port_);
@@ -108,7 +108,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens IMU
     rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    const int64_t passo_ideal = 1000000000/imu_freq_ideal_; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
+    const int64_t passo_ideal; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
 
     void ReadPub_callback()
     {
@@ -155,7 +155,7 @@ class SerialImuNode : public rclcpp::Node
         //----------------------------------------------------------------------------
         
         rclcpp::Time tempo_atual_ros = this->now();
-
+        passo_ideal = 1000000000/imu_freq_ideal_;
         //Composição da mensagem Imu:
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
@@ -194,7 +194,7 @@ class SerialImuNode : public rclcpp::Node
             RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
         }
         //-----------------------------------------------------------------
-        /*
+        
         //Composição da mensagem NavSatFix (GPS):
         auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
         gpsMsg->header.stamp = tempo_atual_ros;
@@ -215,7 +215,7 @@ class SerialImuNode : public rclcpp::Node
         try {gps_pub_->publish(*gpsMsg);}
         catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
         //-----------------------------------------------------------------
-
+        /*
         //Composição da mensagem PointCloud2 (Sonar):
         auto sonarPc2Msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
@@ -226,8 +226,8 @@ class SerialImuNode : public rclcpp::Node
         sensor_msgs::PointCloud2Modifier modificador(*sonarPc2Msg); 
         modificador.setPointCloud2FieldsByString(1, "xyz");
         modificador.resize(sonares_.size());
-        */
-        /*//Iteradores para preencher cada campo da PointCloud2:
+        
+        //Iteradores para preencher cada campo da PointCloud2:
         sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
         sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
         sensor_msgs::PointCloud2Iterator<float> iter_z(*sonarPc2Msg, "z");
