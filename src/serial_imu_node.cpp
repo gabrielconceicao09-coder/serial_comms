@@ -41,11 +41,11 @@ class SerialImuNode : public rclcpp::Node
         sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
 
         //Structs para cada um dos sonares
-        sonar1_config_ = this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
-        sonar2_config_ = this->declare_parameter<ConfigSonar>("sonar2_config", {1.0, 1.0, 0.0, 2.0, 1.0});
-        sonar3_config_ = this->declare_parameter<ConfigSonar>("sonar3_config", {1.0, 1.0, 0.0, 2.0, 1.0});
-        sonar4_config_ = this->declare_parameter<ConfigSonar>("sonar4_config", {1.0, 1.0, 0.0, 2.0, 1.0});
-        sonar5_config_ = this->declare_parameter<ConfigSonar>("sonar5_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar2_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar2_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar3_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar3_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar4_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar4_config", {1.0, 1.0, 0.0, 2.0, 1.0});
+        sonar5_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar5_config", {1.0, 1.0, 0.0, 2.0, 1.0});
 
         sonares_.push_back(sonar1_config_);
         sonares_.push_back(sonar2_config_);
@@ -108,7 +108,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens IMU
     rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    const int64_t passo_ideal = 1000000/imu_freq_ideal_; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
+    const int64_t passo_ideal = 1000000000/imu_freq_ideal_; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
 
     void ReadPub_callback()
     {
@@ -166,9 +166,9 @@ class SerialImuNode : public rclcpp::Node
         }
         else {
             tempo_conformado += rclcpp::Duration(0, passo_ideal);
-            int64_t erro_tempo_us = tempo_atual_ros.microseconds() - tempo_conformado.microseconds();
-            if (std::abs(erro_tempo_us) > passo_ideal/2){
-                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_us);
+            int64_t erro_tempo_ns = tempo_atual_ros.nanoseconds() - tempo_conformado.nanoseconds();
+            if (std::abs(erro_tempo_ns) > passo_ideal/2){
+                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns);
             }
         }
         imuMsg->header.stamp = tempo_conformado;
@@ -202,8 +202,8 @@ class SerialImuNode : public rclcpp::Node
 
         //Status do gps:
         auto gpsStatusMsg = std::make_shared<sensor_msgs::msg::NavSatStatus>();
-        gpsStatusMsg->status = STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
-        gpsStatusMsg->service = SERVICE_GPS; //Define o serviço que o gps tá usando
+        gpsStatusMsg->status = 0;//STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
+        gpsStatusMsg->service = 0;//SERVICE_GPS; //Define o serviço que o gps tá usando
         gpsMsg->status = gpsStatusMsg;
 
         gpsMsg->latitude = 1.0; //graus
@@ -212,7 +212,7 @@ class SerialImuNode : public rclcpp::Node
         gpsMsg->position_covariance = [0.0, 0.0, 0.0,
                                         0.0, 0.0, 0.0,
                                         0.0, 0.0, 0.0]; //Covariância das medidas do gps
-        gpsMsg->position_covariance_type = COVARIANCE_TYPE_UNKNOWN;
+        gpsMsg->position_covariance_type = 0;//COVARIANCE_TYPE_UNKNOWN;
 
         try {gps_pub_->publish(*gpsMsg);}
         catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
