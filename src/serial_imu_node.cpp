@@ -33,12 +33,12 @@ class SerialImuNode : public rclcpp::Node
 
         imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
         imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
-        gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
-        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+        //gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
+        //sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
 
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(imu_topic_, rclcpp::SensorDataQoS());
-        gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
-        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        //gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
+        //sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
 
         /*//Structs para cada um dos sonares
         sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
@@ -100,15 +100,15 @@ class SerialImuNode : public rclcpp::Node
 
     //Publishers:
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
+    //rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
     //Variáveis para ajuste temporal das mensagens IMU
     rclcpp::Time tempo_conformado;
     bool primeira_leitura = true;
-    const int64_t passo_ideal; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
+    int64_t passo_ideal; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
 
     void ReadPub_callback()
     {
@@ -163,7 +163,7 @@ class SerialImuNode : public rclcpp::Node
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
 
-        this->passo_ideal = 1000000000/imu_freq_ideal_;
+        passo_ideal = 1000000000/imu_freq_ideal_;
 
         if (primeira_leitura){
             tempo_conformado = tempo_atual;
@@ -200,7 +200,7 @@ class SerialImuNode : public rclcpp::Node
         }
         //-----------------------------------------------------------------
         
-        //Composição da mensagem NavSatFix (GPS):
+        /*//Composição da mensagem NavSatFix (GPS):
         auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
         gpsMsg->header.stamp = tempo_atual;
         gpsMsg->header.frame_id = "gps_link";
