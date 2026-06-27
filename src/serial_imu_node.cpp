@@ -177,9 +177,10 @@ class SerialImuNode : public rclcpp::Node
        
         imuMsg->header.stamp = tempo_atual;
 
-        imuMsg->linear_acceleration.x = valores[0];
-        imuMsg->linear_acceleration.y = valores[1];
-        imuMsg->linear_acceleration.z = valores[2]+1.0;
+        double escala_acc = 9.81/10.9; //Fator de escala para corrigir valor lido da gravidade
+        imuMsg->linear_acceleration.x = valores[0]*escala_acc;
+        imuMsg->linear_acceleration.y = valores[1]*escala_acc;
+        imuMsg->linear_acceleration.z = valores[2]*escala_acc;
         imuMsg->linear_acceleration_covariance[0] = -1;
         imuMsg->angular_velocity.x = valores[3];
         imuMsg->angular_velocity.y = valores[4];
