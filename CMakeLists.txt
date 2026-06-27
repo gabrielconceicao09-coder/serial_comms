@@ -46,9 +46,18 @@ add_executable(serial_imu_node
 ament_target_dependencies(serial_imu_node #para rodar no kilted
 rclcpp
 sensor_msgs
-) 
+)
 
-install(TARGETS serial_imu_node
+add_executable(image_restamper_node
+  src/image_restamper_node.cpp
+)
+ament_target_dependencies(image_restamper_node
+rclcpp
+sensor_msgs
+)
+
+
+install(TARGETS serial_imu_node image_restamper_node
 DESTINATION lib/${PROJECT_NAME}
 )
 
