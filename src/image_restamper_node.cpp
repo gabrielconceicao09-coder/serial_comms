@@ -10,7 +10,8 @@ class ImageRestamperNode : public rclcpp::Node
         sub_topic_ = this->declare_parameter<std::string>("sub_topic", "/image_raw");
         pub_topic_ = this->declare_parameter<std::string>("pub_topic", "/image_restamped");
 
-        img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(sub_topic_, 10, std::bind);
+        img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(sub_topic_, 10,
+             std::bind(&ImageRestamperNode::Restamp, this, std::placeholders::_1));
         img_pub_ = this->create_publisher<sensor_msgs::msg::Image>(pub_topic_, 10);
     }
 
