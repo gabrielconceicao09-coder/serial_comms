@@ -155,9 +155,7 @@ class SerialImuNode : public rclcpp::Node
         //----------------------------------------------------------------------------
         
         //Tempo atual
-        //struct timespec ts;
-        //clock_gettime(CLOCK_MONOTONIC, &ts);
-        rclcpp::Time tempo_atual = this->now();//(ts.tv_sec, ts.tv_nsec, RCL_SYSTEM_TIME);
+        rclcpp::Time tempo_atual = rclcpp::Clock(RCL_STEADY_TIME).now();//this->now();
 
         //Composição da mensagem Imu:
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
