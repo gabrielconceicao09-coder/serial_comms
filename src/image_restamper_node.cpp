@@ -33,4 +33,4 @@ class ImageRestamperNode : public rclcpp::Node
             RCLCPP_INFO(this->get_logger(), "Imagem restampada não publicada");
         }
     }
-}
+};
