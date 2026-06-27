@@ -174,7 +174,7 @@ class SerialImuNode : public rclcpp::Node
                 tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns);
             }
         }
-        imuMsg->header.stamp = tempo_conformado;
+        imuMsg->header.stamp = tempo_atual;
 
         imuMsg->linear_acceleration.x = valores[0];
         imuMsg->linear_acceleration.y = valores[1];
