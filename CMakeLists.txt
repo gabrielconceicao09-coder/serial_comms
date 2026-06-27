@@ -57,8 +57,11 @@ sensor_msgs
 )
 
 
-install(TARGETS serial_imu_node image_restamper_node
+install(TARGETS serial_imu_node
 DESTINATION lib/${PROJECT_NAME}
 )
 
+install(TARGETS image_restamper_node
+DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()
