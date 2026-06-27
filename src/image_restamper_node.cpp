@@ -13,6 +13,7 @@ class ImageRestamperNode : public rclcpp::Node
         img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(sub_topic_, 10,
              std::bind(&ImageRestamperNode::Restamp, this, std::placeholders::_1));
         img_pub_ = this->create_publisher<sensor_msgs::msg::Image>(pub_topic_, 10);
+        RCLCPP_INFO(this->get_logger(), "Nó image_restamper_node iniciado com inscrição em %s e publicando em %s", sub_topic_, pub_topic_);
     }
 
     ~ImageRestamperNode(){
