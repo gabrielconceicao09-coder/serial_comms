@@ -156,7 +156,7 @@ class SerialImuNode : public rclcpp::Node
         //----------------------------------------------------------------------------
         
         //Tempo atual do sistema:
-        rclcpp::Time tempo_steady = rclcpp::Clock(RCL_SYSTEM_TIME).now();
+        rclcpp::Time tempo_ros = rclcpp::Clock(RCL_SYSTEM_TIME).now();
 
         //Composição da mensagem Imu:
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
@@ -180,13 +180,13 @@ class SerialImuNode : public rclcpp::Node
         
         //Composição do tempo de aquisição no relógio do sistema:
         if (primeira_leitura){
-            offset_clocks_imu_ns = tempo_steady.nanoseconds() - micros_esp_imu*1000LL;
+            offset_clocks_imu_ns = tempo_ros.nanoseconds() - micros_esp_imu*1000LL;
             primeira_leitura = false;
         }
         int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
-        if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
-            timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
-        }
+        //if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
+        //    timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
+        //}
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
 
         //int64_t offset_clocks_instantaneo_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
