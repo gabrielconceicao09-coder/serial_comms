@@ -33,6 +33,7 @@ class ImageRestamperNode : public rclcpp::Node
         if (primeira_leitura){
             uint32_t t0_imagem = msg->header.stamp.nanosec;
             offset_clocks_ns = tempo_steady.nanoseconds() - t0_imagem;
+            primeira_leitura = false;
         }
         uint32_t tempo_mensagem_ns = msg->header.stamp.nanosec;
         msg->header.stamp = rclcpp::Time(tempo_mensagem_ns + offset_clocks_ns);
