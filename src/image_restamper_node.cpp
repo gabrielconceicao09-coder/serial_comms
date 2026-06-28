@@ -25,7 +25,10 @@ class ImageRestamperNode : public rclcpp::Node
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr img_pub_;
 
+
     void Restamp(sensor_msgs::msg::Image::SharedPtr msg){
+        RCLCPP_INFO(this->get_logger(), "Tempos: msg: %.6f, steady: %.6f, system: %.6f", msg->header.stamp,
+         rclcpp::Clock(RCL_STEADY_TIME).now(), rclcpp::Clock(RCL_SYSTEM_TIME).now());
         msg->header.stamp = rclcpp::Clock(RCL_STEADY_TIME).now();
         try{
         img_pub_->publish(*msg);
