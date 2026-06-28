@@ -30,8 +30,8 @@ class ImageRestamperNode : public rclcpp::Node
         auto steady = rclcpp::Clock(RCL_STEADY_TIME).now();
         auto system = rclcpp::Clock(RCL_SYSTEM_TIME).now();
         auto msgt = msg->header.stamp;
-        RCLCPP_INFO(this->get_logger(), "Tempos: msg: %d, steady: %d, system: %d", msgt,
-         steady, system);
+        RCLCPP_INFO(this->get_logger(), "Tempos: msg: %.9f, steady: %.9f, system: %.9f", msgt.seconds(),
+         steady.seconds(), system.seconds());
         msg->header.stamp = rclcpp::Clock(RCL_STEADY_TIME).now();
         try{
         img_pub_->publish(*msg);
