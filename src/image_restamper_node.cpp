@@ -34,8 +34,8 @@ class ImageRestamperNode : public rclcpp::Node
             uint32_t t0_imagem = msg->header.stamp.nanosec;
             offset_clocks_ns = tempo_steady.nanoseconds() - t0_imagem;
         }
-        uint32_t tempo_mensagem_ns = msg->header.stamp().nanosec;
-        msg->header.stamp = rclcpp::Time(tempo_mensagem_ns + offset_clock_ns);
+        uint32_t tempo_mensagem_ns = msg->header.stamp.nanosec;
+        msg->header.stamp = rclcpp::Time(tempo_mensagem_ns + offset_clocks_ns);
         try{
         img_pub_->publish(*msg);
         }
