@@ -30,11 +30,12 @@ class ImageRestamperNode : public rclcpp::Node
 
     void Restamp(sensor_msgs::msg::Image::SharedPtr msg){
         rclcpp::Time tempo_steady = rclcpp::Clock(RCL_STEADY_TIME).now();
+        rclcpp::Time t_imagem = msg->header.stamp;
         if (primeira_leitura){
             t0_imagem = msg->header.stamp;
             primeira_leitura = false;
         }
-        rclcpp::Duration offset_clocks = msg->header.stamp - t0_imagem;
+        rclcpp::Duration offset_clocks = t_imagem - t0_imagem;
         msg->header.stamp = tempo_steady + offset_clocks;
         try{
         img_pub_->publish(*msg);
