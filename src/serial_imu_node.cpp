@@ -115,146 +115,143 @@ class SerialImuNode : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "ReadPub_callback() chamado");
 
         //Leitura da porta serial:
-        if (!serial_.available())
-        {
-            RCLCPP_WARN(this->get_logger(), "Serial não disponível");
-            return; //Retorna pra q seja tentado novamente
-        }
-        
-        std::string line = serial_.readline(65536, "\n");
+        while (!serial_.available())
+        {        
+            std::string line = serial_.readline(65536, "\n");
 
-        if (line.empty())
-        {
-            RCLCPP_WARN(this->get_logger(), "Problema na leitura ou leitura vazia");
-            return;
-        }
-
-        std::stringstream ss(line);
-
-        std::vector<double> valores;
-        std::string item;
-        
-        try
-        {
-        while (std::getline(ss, item, ','))
-        {
-            valores.push_back(std::stod(item));
-        }
-        }
-        catch (...)
-        {
-            RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double (IMU): %s", item.c_str());
-            return;
-        }
-
-        if (valores.size() != 11)
-        {
-            RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %i", line.c_str(), valores.size());
-            return; 
-        }
-        //----------------------------------------------------------------------------
-        
-        //Tempo atual do sistema:
-        rclcpp::Time tempo_steady = rclcpp::Clock(RCL_STEADY_TIME).now();
-
-        //Composição da mensagem Imu:
-        auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
-        imuMsg->header.frame_id = "imu_link";
-
-        uint32_t sequencia = (uint32_t) valores[0];
-        uint32_t micros_esp_imu = (uint32_t) valores[1];
-
-        imuMsg->linear_acceleration.x = valores[2];
-        imuMsg->linear_acceleration.y = valores[3];
-        imuMsg->linear_acceleration.z = valores[4];
-        imuMsg->linear_acceleration_covariance[0] = -1;
-        imuMsg->angular_velocity.x = valores[5];
-        imuMsg->angular_velocity.y = valores[6];
-        imuMsg->angular_velocity.z = valores[7];
-        imuMsg->angular_velocity_covariance[0] = -1;
-        imuMsg->orientation.x = valores[8];
-        imuMsg->orientation.y = valores[9];
-        imuMsg->orientation.z = valores[10]; //compõe a mensagem
-        imuMsg->orientation_covariance[0] = -1;
-        
-        //Composição do tempo de aquisição no relógio do sistema:
-        if (primeira_leitura){
-            offset_clocks_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
-            primeira_leitura = false;
-        }
-
-        //int64_t offset_clocks_instantaneo_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
-        //Ajuste do offset para evitar drift em longos tempos de operação:
-        //offset_clocks_imu_ns += (offset_clocks_instantaneo_imu_ns-offset_clocks_imu_ns)/1000;
-
-        imuMsg->header.stamp = rclcpp::Time((int64_t)micros_esp_imu*1000LL + offset_clocks_imu_ns);
-
-        try {
-            imu_pub_->publish(*imuMsg); //publica as medições do MPU
-        }
-        catch (...)
-        {
-            RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
-        }
-        //-----------------------------------------------------------------
-        
-        /*//Composição da mensagem NavSatFix (GPS):
-        auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
-        gpsMsg->header.stamp = tempo_atual;
-        gpsMsg->header.frame_id = "gps_link";
-
-        //Status do gps:
-        auto gpsStatusMsg = std::make_shared<sensor_msgs::msg::NavSatStatus>();
-        gpsStatusMsg->status = 0;//STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
-        gpsStatusMsg->service = 0;//SERVICE_GPS; //Define o serviço que o gps tá usando
-        gpsMsg->status = gpsStatusMsg;
-
-        gpsMsg->latitude = 1.0; //graus
-        gpsMsg->longitude = 1.0; //graus
-        gpsMsg->altitude = 1.0; //metro
-        gpsMsg->position_covariance = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //Covariância das medidas do gps
-        gpsMsg->position_covariance_type = 0;//COVARIANCE_TYPE_UNKNOWN;
-
-        try {gps_pub_->publish(*gpsMsg);}
-        catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
-        //-----------------------------------------------------------------
-        /*
-        //Composição da mensagem PointCloud2 (Sonar):
-        auto sonarPc2Msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
-
-        sonarPc2Msg->header.stamp = tempo_atual;
-        sonarPc2Msg->header.frame_id = "base_link";
-
-        //Modificador para alocação de memória e organização da mensagem PointCloud2
-        sensor_msgs::PointCloud2Modifier modificador(*sonarPc2Msg); 
-        modificador.setPointCloud2FieldsByString(1, "xyz");
-        modificador.resize(sonares_.size());
-        
-        //Iteradores para preencher cada campo da PointCloud2:
-        sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
-        sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
-        sensor_msgs::PointCloud2Iterator<float> iter_z(*sonarPc2Msg, "z");
-        
-        //Calcula a posição x e y do ponto a adicionar na PointCloud2 para as medidas de cada sonar
-        for (size_t i; i < sonares_.size(); i++){
-            float dist = 1.0 //recebe distância de cada sonar de acordo com índice i
-            auto& config = sonares_[i];
-            if (dist >= config.min_alc && dist <= config.max_alc) {
-                *iter_x = config.x + dist*std::cos(config.angulo_rel);
-                *iter_y = config.y + dist*std::sin(config.angulo_rel);
-                *iter_z = 0.0;
-            } else {
-                *iter_x = std::numeric_limits::quiet_NaN();
-                *iter_y = std::numeric_limits::quiet_NaN();
-                *iter_z = std::numeric_limits::quiet_NaN();
+            if (line.empty())
+            {
+                RCLCPP_WARN(this->get_logger(), "Problema na leitura ou leitura vazia");
+                return;
             }
 
-            iter_x ++; iter_y ++; iter_z ++;
-        }
-        try {sonar_pub_->publish(*sonarPc2Msg);}
-        catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem sonares não publicada");}
-        //--------------------------------------------------------------------------------
-        */
+            std::stringstream ss(line);
+
+            std::vector<double> valores;
+            std::string item;
+            
+            try
+            {
+            while (std::getline(ss, item, ','))
+            {
+                valores.push_back(std::stod(item));
+            }
+            }
+            catch (...)
+            {
+                RCLCPP_WARN(this->get_logger(), "Erro na conversão de valores para double (IMU): %s", item.c_str());
+                return;
+            }
+
+            if (valores.size() != 11)
+            {
+                RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %i", line.c_str(), valores.size());
+                return; 
+            }
+            //----------------------------------------------------------------------------
+            
+            //Tempo atual do sistema:
+            rclcpp::Time tempo_steady = rclcpp::Clock(RCL_STEADY_TIME).now();
+
+            //Composição da mensagem Imu:
+            auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
+            imuMsg->header.frame_id = "imu_link";
+
+            uint32_t sequencia = (uint32_t) valores[0];
+            uint32_t micros_esp_imu = (uint32_t) valores[1];
+
+            imuMsg->linear_acceleration.x = valores[2];
+            imuMsg->linear_acceleration.y = valores[3];
+            imuMsg->linear_acceleration.z = valores[4];
+            imuMsg->linear_acceleration_covariance[0] = -1;
+            imuMsg->angular_velocity.x = valores[5];
+            imuMsg->angular_velocity.y = valores[6];
+            imuMsg->angular_velocity.z = valores[7];
+            imuMsg->angular_velocity_covariance[0] = -1;
+            imuMsg->orientation.x = valores[8];
+            imuMsg->orientation.y = valores[9];
+            imuMsg->orientation.z = valores[10]; //compõe a mensagem
+            imuMsg->orientation_covariance[0] = -1;
+            
+            //Composição do tempo de aquisição no relógio do sistema:
+            if (primeira_leitura){
+                offset_clocks_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
+                primeira_leitura = false;
+            }
+
+            //int64_t offset_clocks_instantaneo_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
+            //Ajuste do offset para evitar drift em longos tempos de operação:
+            //offset_clocks_imu_ns += (offset_clocks_instantaneo_imu_ns-offset_clocks_imu_ns)/1000;
+
+            imuMsg->header.stamp = rclcpp::Time((int64_t)micros_esp_imu*1000LL + offset_clocks_imu_ns);
+
+            try {
+                imu_pub_->publish(*imuMsg); //publica as medições do MPU
+            }
+            catch (...)
+            {
+                RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
+            }
+            //-----------------------------------------------------------------
+            
+            /*//Composição da mensagem NavSatFix (GPS):
+            auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
+            gpsMsg->header.stamp = tempo_atual;
+            gpsMsg->header.frame_id = "gps_link";
+
+            //Status do gps:
+            auto gpsStatusMsg = std::make_shared<sensor_msgs::msg::NavSatStatus>();
+            gpsStatusMsg->status = 0;//STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
+            gpsStatusMsg->service = 0;//SERVICE_GPS; //Define o serviço que o gps tá usando
+            gpsMsg->status = gpsStatusMsg;
+
+            gpsMsg->latitude = 1.0; //graus
+            gpsMsg->longitude = 1.0; //graus
+            gpsMsg->altitude = 1.0; //metro
+            gpsMsg->position_covariance = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //Covariância das medidas do gps
+            gpsMsg->position_covariance_type = 0;//COVARIANCE_TYPE_UNKNOWN;
+
+            try {gps_pub_->publish(*gpsMsg);}
+            catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
+            //-----------------------------------------------------------------
+            /*
+            //Composição da mensagem PointCloud2 (Sonar):
+            auto sonarPc2Msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+            sonarPc2Msg->header.stamp = tempo_atual;
+            sonarPc2Msg->header.frame_id = "base_link";
+
+            //Modificador para alocação de memória e organização da mensagem PointCloud2
+            sensor_msgs::PointCloud2Modifier modificador(*sonarPc2Msg); 
+            modificador.setPointCloud2FieldsByString(1, "xyz");
+            modificador.resize(sonares_.size());
+            
+            //Iteradores para preencher cada campo da PointCloud2:
+            sensor_msgs::PointCloud2Iterator<float> iter_x(*sonarPc2Msg, "x");
+            sensor_msgs::PointCloud2Iterator<float> iter_y(*sonarPc2Msg, "y");
+            sensor_msgs::PointCloud2Iterator<float> iter_z(*sonarPc2Msg, "z");
+            
+            //Calcula a posição x e y do ponto a adicionar na PointCloud2 para as medidas de cada sonar
+            for (size_t i; i < sonares_.size(); i++){
+                float dist = 1.0 //recebe distância de cada sonar de acordo com índice i
+                auto& config = sonares_[i];
+                if (dist >= config.min_alc && dist <= config.max_alc) {
+                    *iter_x = config.x + dist*std::cos(config.angulo_rel);
+                    *iter_y = config.y + dist*std::sin(config.angulo_rel);
+                    *iter_z = 0.0;
+                } else {
+                    *iter_x = std::numeric_limits::quiet_NaN();
+                    *iter_y = std::numeric_limits::quiet_NaN();
+                    *iter_z = std::numeric_limits::quiet_NaN();
+                }
+
+                iter_x ++; iter_y ++; iter_z ++;
+            }
+            try {sonar_pub_->publish(*sonarPc2Msg);}
+            catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem sonares não publicada");}
+            //--------------------------------------------------------------------------------
+            */
+        }   
     }
 };
 
