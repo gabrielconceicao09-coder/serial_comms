@@ -24,20 +24,18 @@ class ImageRestamperNode : public rclcpp::Node
     std::string sub_topic_, pub_topic_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr img_pub_;
+    bool primeira_leitura = true;
+    uint32_t offset_clocks_ns;
 
 
     void Restamp(sensor_msgs::msg::Image::SharedPtr msg){
-        auto msgt = rclcpp::Time(msg->header.stamp);
-        auto steady = rclcpp::Clock(RCL_STEADY_TIME).now();
-        auto system = rclcpp::Clock(RCL_SYSTEM_TIME).now();
-
-        RCLCPP_INFO(
-            this->get_logger(),
-            "msg=%ld\nsteady=%ld\nsystem=%ld",
-            msgt.nanoseconds(),
-            steady.nanoseconds(),
-            system.nanoseconds());
-        msg->header.stamp = rclcpp::Clock(RCL_STEADY_TIME).now();
+        rclcpp::Time tempo_steady = rclcpp::Clock(RCL_STEADY_TIME).now();
+        if (primeira_leitura){
+            uint32_t t0_imagem = msg->header.stamp.nanosec;
+            offset_clocks_ns = tempo_steady.nanoseconds() - t0_imagem;
+        }
+        uint32_t tempo_mensagem_ns = msg->header.stamp().nanosec;
+        msg->header.stamp = rclcpp::Time(tempo_mensagem_ns + offset_clock_ns);
         try{
         img_pub_->publish(*msg);
         }
