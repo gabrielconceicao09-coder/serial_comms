@@ -105,10 +105,10 @@ class SerialImuNode : public rclcpp::Node
 
     rclcpp::TimerBase::SharedPtr timer_;
 
-    //Variáveis para ajuste temporal das mensagens IMU
-    rclcpp::Time tempo_conformado;
+    //Variáveis para ajuste temporal das mensagens
     bool primeira_leitura = true;
-    int64_t passo_ideal; //período ideal de amostragem, em microssegundos, para frequência de amostragem observada (Ex: 100 Hz => 10000us)
+    int64_t offset_clocks_imu_ns;
+    uint32_t ultimo_micros_esp_imu, ultima_seq_imu;
 
     void ReadPub_callback()
     {
@@ -154,42 +154,41 @@ class SerialImuNode : public rclcpp::Node
         }
         //----------------------------------------------------------------------------
         
-        //Tempo atual
-        rclcpp::Time tempo_atual = rclcpp::Clock(RCL_STEADY_TIME).now();//this->now();
+        //Tempo atual do sistema:
+        rclcpp::Time tempo_sistema = rclcpp::Clock(RCL_SYSTEM_TIME).now();
 
         //Composição da mensagem Imu:
         auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
 
-        /*passo_ideal = 1000000000/imu_freq_ideal_;
+        uint32_t sequencia = (uint32_t) valores[0];
+        uint32_t micros_esp_imu = (uint32_t) valores[1];
 
-        if (primeira_leitura){
-            tempo_conformado = tempo_atual;
-            primeira_leitura = false;
-        }
-        else {
-            tempo_conformado += rclcpp::Duration(0, passo_ideal);
-            int64_t erro_tempo_ns = tempo_atual.nanoseconds() - tempo_conformado.nanoseconds();
-            if (std::abs(erro_tempo_ns) > passo_ideal/2){
-                tempo_conformado += rclcpp::Duration(0, 0.1*erro_tempo_ns);
-            }
-        }*/
-       
-        imuMsg->header.stamp = tempo_atual;
-
-        imuMsg->linear_acceleration.x = valores[0];
-        imuMsg->linear_acceleration.y = valores[1];
-        imuMsg->linear_acceleration.z = valores[2];
+        imuMsg->linear_acceleration.x = valores[2];
+        imuMsg->linear_acceleration.y = valores[3];
+        imuMsg->linear_acceleration.z = valores[4];
         imuMsg->linear_acceleration_covariance[0] = -1;
-        imuMsg->angular_velocity.x = valores[3];
-        imuMsg->angular_velocity.y = valores[4];
-        imuMsg->angular_velocity.z = valores[5];
+        imuMsg->angular_velocity.x = valores[5];
+        imuMsg->angular_velocity.y = valores[6];
+        imuMsg->angular_velocity.z = valores[7];
         imuMsg->angular_velocity_covariance[0] = -1;
-        imuMsg->orientation.x = valores[6];
-        imuMsg->orientation.y = valores[7];
-        imuMsg->orientation.z = valores[8]; //compõe a mensagem
+        imuMsg->orientation.x = valores[8];
+        imuMsg->orientation.y = valores[9];
+        imuMsg->orientation.z = valores[10]; //compõe a mensagem
         imuMsg->orientation_covariance[0] = -1;
         
+        //Composição do tempo de aquisição no relógio do sistema:
+        if (primeira_leitura){
+            offset_clocks_imu_ns = tempo_sistema.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
+            primeira_leitura = false;
+        }
+
+        int64_t offset_clocks_instantaneo_imu_ns = tempo_sistema.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
+        //Ajuste do offset para evitar drift em longos tempos de operação:
+        offset_clocks_imu_ns += (offset_clocks_instantaneo_imu_ns-offset_clocks_imu_ns)/1000;
+
+        imuMsg->header.stamp = rclcpp::Time((int64_t)micros_esp_imu*1000LL + offset_clocks_imu_ns);
+
         try {
             imu_pub_->publish(*imuMsg); //publica as medições do MPU
         }
