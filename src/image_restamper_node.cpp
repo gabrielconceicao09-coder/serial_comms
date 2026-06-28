@@ -34,9 +34,9 @@ class ImageRestamperNode : public rclcpp::Node
         RCLCPP_INFO(
             this->get_logger(),
             "msg=%ld\nsteady=%ld\nsystem=%ld",
-            msgt.nanosec(),
-            steady.nanosec(),
-            system.nanosec());
+            msgt.nanoseconds(),
+            steady.nanoseconds(),
+            system.nanoseconds());
         msg->header.stamp = rclcpp::Clock(RCL_STEADY_TIME).now();
         try{
         img_pub_->publish(*msg);
