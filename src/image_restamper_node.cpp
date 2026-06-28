@@ -25,18 +25,17 @@ class ImageRestamperNode : public rclcpp::Node
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr img_pub_;
     bool primeira_leitura = true;
-    uint32_t offset_clocks_ns;
+    rclcpp::Time t0_imagem;
 
 
     void Restamp(sensor_msgs::msg::Image::SharedPtr msg){
         rclcpp::Time tempo_steady = rclcpp::Clock(RCL_STEADY_TIME).now();
         if (primeira_leitura){
-            uint32_t t0_imagem = msg->header.stamp.nanosec;
-            offset_clocks_ns = tempo_steady.nanoseconds() - t0_imagem;
+            t0_imagem = msg->header.stamp;
             primeira_leitura = false;
         }
-        uint32_t tempo_mensagem_ns = msg->header.stamp.nanosec;
-        msg->header.stamp = rclcpp::Time(tempo_mensagem_ns + offset_clocks_ns);
+        rclcpp::Duration offset_clocks = msg->header.stamp - t0_imagem;
+        msg->header.stamp = tempo_steady + offset_clocks;
         try{
         img_pub_->publish(*msg);
         }
