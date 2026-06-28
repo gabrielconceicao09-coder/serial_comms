@@ -108,6 +108,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens
     bool primeira_leitura = true;
     int64_t offset_clocks_imu_ns;
+    int64_t ultimo_timestamp_imu_ns = 0;
     uint32_t ultimo_micros_esp_imu, ultima_seq_imu;
 
     void ReadPub_callback()
@@ -162,7 +163,7 @@ class SerialImuNode : public rclcpp::Node
         imuMsg->header.frame_id = "imu_link";
 
         uint32_t sequencia = (uint32_t) valores[0];
-        uint32_t micros_esp_imu = (uint32_t) valores[1];
+        int64_t micros_esp_imu = (int64_t) valores[1];
 
         imuMsg->linear_acceleration.x = valores[2];
         imuMsg->linear_acceleration.y = valores[3];
@@ -179,15 +180,20 @@ class SerialImuNode : public rclcpp::Node
         
         //Composição do tempo de aquisição no relógio do sistema:
         if (primeira_leitura){
-            offset_clocks_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
+            offset_clocks_imu_ns = tempo_steady.nanoseconds() - micros_esp_imu*1000LL;
             primeira_leitura = false;
         }
-
+        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
+        if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
+            timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
+        }
+        ultimo_timestamp_imu_ns = timestamp_imu_ns;
+        
         //int64_t offset_clocks_instantaneo_imu_ns = tempo_steady.nanoseconds() - (int64_t)micros_esp_imu*1000LL;
         //Ajuste do offset para evitar drift em longos tempos de operação:
         //offset_clocks_imu_ns += (offset_clocks_instantaneo_imu_ns-offset_clocks_imu_ns)/1000;
 
-        imuMsg->header.stamp = rclcpp::Time((int64_t)micros_esp_imu*1000LL + offset_clocks_imu_ns);
+        imuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
 
         try {
             imu_pub_->publish(*imuMsg); //publica as medições do MPU
