@@ -147,7 +147,7 @@ class SerialImuNode : public rclcpp::Node
             return;
         }
 
-        if (valores.size() != 9)
+        if (valores.size() != 11)
         {
             RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %i", line.c_str(), valores.size());
             return; 
