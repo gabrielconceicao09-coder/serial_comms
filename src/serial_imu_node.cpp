@@ -80,7 +80,7 @@ class SerialImuNode : public rclcpp::Node
         
         
 
-        timer_ = this->create_wall_timer(1ms, std::bind(&SerialImuNode::ReadPub_callback, this));
+        timer_ = this->create_wall_timer(4ms, std::bind(&SerialImuNode::ReadPub_callback, this));
         RCLCPP_INFO(this->get_logger(), "Timer criado com callback");        
     }
 
