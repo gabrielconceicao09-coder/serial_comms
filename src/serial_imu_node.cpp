@@ -184,11 +184,16 @@ class SerialImuNode : public rclcpp::Node
             primeira_leitura = false;
         }
         int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
+
+        //Tenta garantir monotonicidade dos timestamps:
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
             timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
         }
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
 
+        //Ajuste contínuo do offset:
+        //TODO
+        
         imuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
 
         try {
