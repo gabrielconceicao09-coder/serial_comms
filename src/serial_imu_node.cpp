@@ -30,6 +30,9 @@ class SerialImuNode : public rclcpp::Node
     {
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
+        offset_kalibr_s_ = this->declare_parameter<double>("offset_kalibr_s", -0.022073607573335652);
+        offset_kalibr = (int64_t) offset_kalibr_s_*1e9;
+
 
         imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
         imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
@@ -108,7 +111,8 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens
     bool primeira_leitura = true;
     int64_t offset_clocks_imu_ns;
-    int64_t offset_kalibr = (int64_t) 0.022073607573335652*1e9;
+    double offset_kalibr_s_;
+    int64_t offset_kalibr;
     double offset_alpha_ = 0.01;
     int64_t ultimo_timestamp_imu_ns = 0;
     uint32_t ultimo_micros_esp_imu, ultima_seq_imu;
