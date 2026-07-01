@@ -92,7 +92,7 @@ class SerialImuNode : public rclcpp::Node
     private:
     //Parâmetros:
     std::string port_, imu_topic_;//, gps_topic_, sonar_topic_;
-    int baudrate_;
+    int baudrate_, imu_freq_ideal_;
     //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
     //std::vector<ConfigSonar> sonares_;
 
