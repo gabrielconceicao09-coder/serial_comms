@@ -92,7 +92,7 @@ class SerialImuNode : public rclcpp::Node
     private:
     //Parâmetros:
     std::string port_, imu_topic_;//, gps_topic_, sonar_topic_;
-    int baudrate_, imu_freq_ideal_;
+    int baudrate_;
     //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
     //std::vector<ConfigSonar> sonares_;
 
@@ -108,6 +108,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens
     bool primeira_leitura = true;
     int64_t offset_clocks_imu_ns;
+    double offset_alpha_ = 0.01;
     int64_t ultimo_timestamp_imu_ns = 0;
     uint32_t ultimo_micros_esp_imu, ultima_seq_imu;
 
@@ -183,7 +184,11 @@ class SerialImuNode : public rclcpp::Node
             offset_clocks_imu_ns = tempo_ros.nanoseconds() - micros_esp_imu*1000LL;
             primeira_leitura = false;
         }
-        int64_t timestamp_imu_ns = tempo_ros.nanoseconds();//micros_esp_imu*1000LL + offset_clocks_imu_ns;
+        else{
+            //Ajuste contínuo do offset:
+            offset_clocks_imu_ns = (int64_t) offset_clocks_imu_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_imu*1000LL)*offset_alpha_;
+        }
+        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
 
         //Tenta garantir monotonicidade dos timestamps:
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
@@ -191,9 +196,6 @@ class SerialImuNode : public rclcpp::Node
         }
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
 
-        //Ajuste contínuo do offset:
-        //TODO
-        
         imuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
 
         try {
