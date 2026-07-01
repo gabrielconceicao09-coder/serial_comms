@@ -189,7 +189,7 @@ class SerialImuNode : public rclcpp::Node
             offset_clocks_imu_ns = (int64_t) offset_clocks_imu_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_imu*1000LL)*offset_alpha_;
         }
         int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
-
+        RCLCPP_INFO(this->get_logger(), "Dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
         //Tenta garantir monotonicidade dos timestamps:
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
             timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
