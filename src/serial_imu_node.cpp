@@ -108,6 +108,7 @@ class SerialImuNode : public rclcpp::Node
     //Variáveis para ajuste temporal das mensagens
     bool primeira_leitura = true;
     int64_t offset_clocks_imu_ns;
+    int64_t offset_kalibr = (int64_t) 0.022073607573335652*1e9;
     double offset_alpha_ = 0.01;
     int64_t ultimo_timestamp_imu_ns = 0;
     uint32_t ultimo_micros_esp_imu, ultima_seq_imu;
@@ -188,10 +189,14 @@ class SerialImuNode : public rclcpp::Node
             //Ajuste contínuo do offset:
             offset_clocks_imu_ns = (int64_t) offset_clocks_imu_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_imu*1000LL)*offset_alpha_;
         }
-        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns;
+
+        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns + offset_kalibr;
+
         RCLCPP_INFO(this->get_logger(), "Dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
+
         //Tenta garantir monotonicidade dos timestamps:
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
+            RCLCPP_WARN(this->get_logger(), "Timestamps invertidos, somando 1 ns para tentar garantir monotonicidade. dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
             timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
         }
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
