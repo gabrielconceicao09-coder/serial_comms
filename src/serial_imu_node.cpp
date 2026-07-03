@@ -30,6 +30,12 @@ class SerialImuNode : public rclcpp::Node
     {
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
+        variancia_acl_ = this->declare_parameter<double>("variancia_acl", 200*(0.0016541342577078063)**2);
+        variancia_gir_ = this->declare_parameter<double>("variancia_gir", 200*(0.00011503473194962085)**2);
+        variancia_mag_ = this->declare_parameter<double>("variancia_mag", 0.1);
+        variancia_gps_long_ = this->declare_parameter<double>("variancia_gps_long", 1.0);
+        variancia_gps_lat_ = this->declare_parameter<double>("variancia_gps_lat", 1.0);
+        variancia_gps_alt_ = this->declare_parameter<double>("variancia_gps_alt", 1.0);
         offset_kalibr_s_ = this->declare_parameter<double>("offset_kalibr_s", -0.022073607573335652);
         offset_kalibr = (int64_t) offset_kalibr_s_*1e9;
 
@@ -96,6 +102,8 @@ class SerialImuNode : public rclcpp::Node
     //Parâmetros:
     std::string port_, imu_topic_;//, gps_topic_, sonar_topic_;
     int baudrate_, imu_freq_ideal_;
+    double variancia_acl_, variancia_gir_, variancia_mag_;
+    double variancia_gps_long_, variancia_gps_lat_, variancia_gps_alt;
     //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
     //std::vector<ConfigSonar> sonares_;
 
@@ -174,15 +182,39 @@ class SerialImuNode : public rclcpp::Node
         imuMsg->linear_acceleration.x = valores[2];
         imuMsg->linear_acceleration.y = valores[3];
         imuMsg->linear_acceleration.z = valores[4];
-        imuMsg->linear_acceleration_covariance[0] = -1;
+        imuMsg->linear_acceleration_covariance[0] = variancia_acl_;
+        imuMsg->linear_acceleration_covariance[1] = 0.0;
+        imuMsg->linear_acceleration_covariance[2] = 0.0;
+        imuMsg->linear_acceleration_covariance[3] = variancia_acl_;
+        imuMsg->linear_acceleration_covariance[4] = 0.0;
+        imuMsg->linear_acceleration_covariance[5] = 0.0;
+        imuMsg->linear_acceleration_covariance[6] = variancia_acl_;
+        imuMsg->linear_acceleration_covariance[7] = 0.0;
+        imuMsg->linear_acceleration_covariance[8] = 0.0;
         imuMsg->angular_velocity.x = valores[5];
         imuMsg->angular_velocity.y = valores[6];
         imuMsg->angular_velocity.z = valores[7];
-        imuMsg->angular_velocity_covariance[0] = -1;
+        imuMsg->angular_velocity_covariance[0] = variancia_gir_;
+        imuMsg->angular_velocity_covariance[1] = 0.0;
+        imuMsg->angular_velocity_covariance[2] = 0.0;
+        imuMsg->angular_velocity_covariance[3] = variancia_gir_;
+        imuMsg->angular_velocity_covariance[4] = 0.0;
+        imuMsg->angular_velocity_covariance[5] = 0.0;
+        imuMsg->angular_velocity_covariance[6] = variancia_gir_;
+        imuMsg->angular_velocity_covariance[7] = 0.0;
+        imuMsg->angular_velocity_covariance[8] = 0.0;
         imuMsg->orientation.x = valores[8];
         imuMsg->orientation.y = valores[9];
-        imuMsg->orientation.z = valores[10]; //compõe a mensagem
-        imuMsg->orientation_covariance[0] = -1;
+        imuMsg->orientation.z = valores[10];
+        imuMsg->orientation_covariance[0] = variancia_mag_;
+        imuMsg->orientation_covariance[1] = 0.0;
+        imuMsg->orientation_covariance[2] = 0.0;
+        imuMsg->orientation_covariance[3] = variancia_mag_;
+        imuMsg->orientation_covariance[4] = 0.0;
+        imuMsg->orientation_covariance[5] = 0.0;
+        imuMsg->orientation_covariance[6] = variancia_mag_;
+        imuMsg->orientation_covariance[7] = 0.0;
+        imuMsg->orientation_covariance[8] = 0.0;
         
         //Composição do tempo de aquisição no relógio do sistema:
         if (primeira_leitura){
@@ -196,19 +228,19 @@ class SerialImuNode : public rclcpp::Node
 
         int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns + offset_kalibr;
 
-        RCLCPP_INFO(this->get_logger(), "Dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
+        //RCLCPP_INFO(this->get_logger(), "Dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
 
-        //Tenta garantir monotonicidade dos timestamps:
+        /*//Tenta garantir monotonicidade dos timestamps:
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
             RCLCPP_WARN(this->get_logger(), "Timestamps invertidos, somando 1 ns para tentar garantir monotonicidade. dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
             timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
-        }
+        }*/
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
 
         imuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
 
         try {
-            imu_pub_->publish(*imuMsg); //publica as medições do MPU
+            imu_pub_->publish(*imuMsg);
         }
         catch (...)
         {
@@ -235,6 +267,7 @@ class SerialImuNode : public rclcpp::Node
 
         try {gps_pub_->publish(*gpsMsg);}
         catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
+        */
         //-----------------------------------------------------------------
         /*
         //Composição da mensagem PointCloud2 (Sonar):
