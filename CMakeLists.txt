@@ -6,7 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
-#find_package(ament_cmake REQUIRED)
+find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
@@ -39,14 +39,14 @@ add_executable(serial_imu_node
 	src/impl/list_ports/list_ports_osx.cc
 	src/impl/list_ports/list_ports_win.cc
 )
-target_link_libraries(serial_imu_node PUBLIC #para rodar no foxy
-rclcpp::rclcpp
-sensor_msgs
-)
-##ament_target_dependencies(serial_imu_node #para rodar no kilted
-##rclcpp
+##target_link_libraries(serial_imu_node PUBLIC #para rodar no foxy
+##rclcpp::rclcpp
 ##sensor_msgs
 ##)
+ament_target_dependencies(serial_imu_node #para rodar no kilted
+rclcpp
+sensor_msgs
+)
 
 add_executable(image_restamper_node
   src/image_restamper_node.cpp
