@@ -2,6 +2,7 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/nav_sat_status.hpp"
+#include "sensor_msgs/msg/magnetic_field.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "serial/serial.h"
@@ -40,14 +41,15 @@ class SerialImuNode : public rclcpp::Node
         offset_kalibr = (int64_t) offset_kalibr_s_*1e9;
 
 
-        imu_topic_ = this->declare_parameter<std::string>("imu_topic", "imu");
-        imu_freq_ideal_ = this->declare_parameter<int>("imu_freq_ideal", 100);
+        raw_imu_topic_ = this->declare_parameter<std::string>("raw_imu_topic", "imu/data_raw");
+        raw_mag_topic_ = this->declare_parameter<std::string>("raw_mag_topic", "imu/mag");
         //gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
         //sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
 
-        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(imu_topic_, rclcpp::SensorDataQoS());
-        //gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
-        //sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(raw_imu_topic_, rclcpp::SensorDataQoS());
+        mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>(raw_mag_topic_, rclcpp::SensorDataQoS());
+        gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
+        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
 
         /*//Structs para cada um dos sonares
         sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
@@ -100,8 +102,8 @@ class SerialImuNode : public rclcpp::Node
 
     private:
     //Parâmetros:
-    std::string port_, imu_topic_;//, gps_topic_, sonar_topic_;
-    int baudrate_, imu_freq_ideal_;
+    std::string port_, raw_imu_topic_, raw_mag_topic_, gps_topic_, sonar_topic_;
+    int baudrate_;
     double variancia_acl_, variancia_gir_, variancia_mag_;
     double variancia_gps_long_, variancia_gps_lat_, variancia_gps_alt;
     //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
@@ -111,8 +113,9 @@ class SerialImuNode : public rclcpp::Node
 
     //Publishers:
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
-    //rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
-    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
@@ -172,49 +175,52 @@ class SerialImuNode : public rclcpp::Node
         //Tempo atual do sistema:
         rclcpp::Time tempo_ros = rclcpp::Clock(RCL_SYSTEM_TIME).now();
 
-        //Composição da mensagem Imu:
-        auto imuMsg = std::make_shared<sensor_msgs::msg::Imu>();
+        //Composição das mensagens de dados não filtrados do MPU:
+        auto rawImuMsg = std::make_shared<sensor_msgs::msg::Imu>();
         imuMsg->header.frame_id = "imu_link";
 
         uint32_t sequencia = (uint32_t) valores[0];
         int64_t micros_esp_imu = (int64_t) valores[1];
 
-        imuMsg->linear_acceleration.x = valores[2];
-        imuMsg->linear_acceleration.y = valores[3];
-        imuMsg->linear_acceleration.z = valores[4];
-        imuMsg->linear_acceleration_covariance[0] = variancia_acl_;
-        imuMsg->linear_acceleration_covariance[1] = 0.0;
-        imuMsg->linear_acceleration_covariance[2] = 0.0;
-        imuMsg->linear_acceleration_covariance[3] = variancia_acl_;
-        imuMsg->linear_acceleration_covariance[4] = 0.0;
-        imuMsg->linear_acceleration_covariance[5] = 0.0;
-        imuMsg->linear_acceleration_covariance[6] = variancia_acl_;
-        imuMsg->linear_acceleration_covariance[7] = 0.0;
-        imuMsg->linear_acceleration_covariance[8] = 0.0;
-        imuMsg->angular_velocity.x = valores[5];
-        imuMsg->angular_velocity.y = valores[6];
-        imuMsg->angular_velocity.z = valores[7];
-        imuMsg->angular_velocity_covariance[0] = variancia_gir_;
-        imuMsg->angular_velocity_covariance[1] = 0.0;
-        imuMsg->angular_velocity_covariance[2] = 0.0;
-        imuMsg->angular_velocity_covariance[3] = variancia_gir_;
-        imuMsg->angular_velocity_covariance[4] = 0.0;
-        imuMsg->angular_velocity_covariance[5] = 0.0;
-        imuMsg->angular_velocity_covariance[6] = variancia_gir_;
-        imuMsg->angular_velocity_covariance[7] = 0.0;
-        imuMsg->angular_velocity_covariance[8] = 0.0;
-        imuMsg->orientation.x = valores[8];
-        imuMsg->orientation.y = valores[9];
-        imuMsg->orientation.z = valores[10];
-        imuMsg->orientation_covariance[0] = variancia_mag_;
-        imuMsg->orientation_covariance[1] = 0.0;
-        imuMsg->orientation_covariance[2] = 0.0;
-        imuMsg->orientation_covariance[3] = variancia_mag_;
-        imuMsg->orientation_covariance[4] = 0.0;
-        imuMsg->orientation_covariance[5] = 0.0;
-        imuMsg->orientation_covariance[6] = variancia_mag_;
-        imuMsg->orientation_covariance[7] = 0.0;
-        imuMsg->orientation_covariance[8] = 0.0;
+        rawImuMsg->linear_acceleration.x = valores[2];
+        rawImuMsg->linear_acceleration.y = valores[3];
+        rawImuMsg->linear_acceleration.z = valores[4];
+        rawImuMsg->linear_acceleration_covariance[0] = variancia_acl_;
+        rawImuMsg->linear_acceleration_covariance[1] = 0.0;
+        rawImuMsg->linear_acceleration_covariance[2] = 0.0;
+        rawImuMsg->linear_acceleration_covariance[3] = variancia_acl_;
+        rawImuMsg->linear_acceleration_covariance[4] = 0.0;
+        rawImuMsg->linear_acceleration_covariance[5] = 0.0;
+        rawImuMsg->linear_acceleration_covariance[6] = variancia_acl_;
+        rawImuMsg->linear_acceleration_covariance[7] = 0.0;
+        rawImuMsg->linear_acceleration_covariance[8] = 0.0;
+        rawImuMsg->angular_velocity.x = valores[5];
+        rawImuMsg->angular_velocity.y = valores[6];
+        rawImuMsg->angular_velocity.z = valores[7];
+        rawImuMsg->angular_velocity_covariance[0] = variancia_gir_;
+        rawImuMsg->angular_velocity_covariance[1] = 0.0;
+        rawImuMsg->angular_velocity_covariance[2] = 0.0;
+        rawImuMsg->angular_velocity_covariance[3] = variancia_gir_;
+        rawImuMsg->angular_velocity_covariance[4] = 0.0;
+        rawImuMsg->angular_velocity_covariance[5] = 0.0;
+        rawImuMsg->angular_velocity_covariance[6] = variancia_gir_;
+        rawImuMsg->angular_velocity_covariance[7] = 0.0;
+        rawImuMsg->angular_velocity_covariance[8] = 0.0;
+
+        auto rawMagMsg = std::make_shared<sensor_msgs::msg::MagneticField>();
+        rawMagMsg->header.frame_id = "imu_link";
+        rawMagMsg->magnetic_field.x = valores[8];
+        rawMagMsg->magnetic_field.y = valores[9];
+        rawMagMsg->magnetic_field.z = valores[10];
+        rawMagMsg->magnetic_field_covariance[0] = variancia_mag_;
+        rawMagMsg->magnetic_field_covariance[1] = 0.0;
+        rawMagMsg->magnetic_field_covariance[2] = 0.0;
+        rawMagMsg->magnetic_field_covariance[3] = variancia_mag_;
+        rawMagMsg->magnetic_field_covariance[4] = 0.0;
+        rawMagMsg->magnetic_field_covariance[5] = 0.0;
+        rawMagMsg->magnetic_field_covariance[6] = variancia_mag_;
+        rawMagMsg->magnetic_field_covariance[7] = 0.0;
+        rawMagMsg->magnetic_field_covariance[8] = 0.0;
         
         //Composição do tempo de aquisição no relógio do sistema:
         if (primeira_leitura){
@@ -237,14 +243,16 @@ class SerialImuNode : public rclcpp::Node
         }*/
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
 
-        imuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
+        rawImuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
+        rawMagMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
 
         try {
-            imu_pub_->publish(*imuMsg);
+            imu_pub_->publish(*rawImuMsg);
+            mag_pub_->publish(*rawMagMsg);
         }
         catch (...)
         {
-            RCLCPP_WARN(this->get_logger(), "Mensagem IMU não publicada");
+            RCLCPP_WARN(this->get_logger(), "Mensagens IMU não publicadas");
         }
         //-----------------------------------------------------------------
         
