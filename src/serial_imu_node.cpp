@@ -182,7 +182,7 @@ class SerialImuNode : public rclcpp::Node
 
         //Composição das mensagens de dados não filtrados do MPU:
         auto rawImuMsg = std::make_shared<sensor_msgs::msg::Imu>();
-        auto rawMagMsg = std::make_shared<sensors_msgs::msg::MagneticField>();
+        auto rawMagMsg = std::make_shared<sensor_msgs::msg::MagneticField>();
         rawImuMsg->header.frame_id = "imu_link";
         rawMagMsg->header.frame_id = "imu_link";
 
