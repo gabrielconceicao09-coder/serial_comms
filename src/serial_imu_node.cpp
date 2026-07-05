@@ -182,6 +182,7 @@ class SerialImuNode : public rclcpp::Node
 
         //Composição das mensagens de dados não filtrados do MPU:
         auto rawImuMsg = std::make_shared<sensor_msgs::msg::Imu>();
+        auto rawMagMsg = std::make_shared<sensors_msgs::msg::MagneticField>();
         rawImuMsg->header.frame_id = "imu_link";
         rawMagMsg->header.frame_id = "imu_link";
 
@@ -238,7 +239,7 @@ class SerialImuNode : public rclcpp::Node
             offset_clocks_ns = (int64_t) offset_clocks_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_imu*1000LL)*offset_alpha_;
         }
 
-        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_imu_ns; //+ offset_kalibr;
+        int64_t timestamp_imu_ns = micros_esp_imu*1000LL + offset_clocks_ns; //+ offset_kalibr;
 
         //RCLCPP_INFO(this->get_logger(), "Dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
 
