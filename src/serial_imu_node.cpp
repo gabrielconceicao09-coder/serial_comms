@@ -46,13 +46,15 @@ class SerialImuNode : public rclcpp::Node
 
         raw_imu_topic_ = this->declare_parameter<std::string>("raw_imu_topic", "imu/data_raw");
         raw_mag_topic_ = this->declare_parameter<std::string>("raw_mag_topic", "imu/mag");
-        //gps_topic_ = this->declare_parameter<std::string>("gps_topic", "fix");
-        //sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+        gps_topic_ = this->declare_parameter<std::string>("gps_topic", "gps/fix_raw");
+        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/pcl");
+        encoders_topic_ = this->declare_parameter<std::string>("encoders_topic", "encoders/twist_raw");
 
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(raw_imu_topic_, rclcpp::SensorDataQoS());
         mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>(raw_mag_topic_, rclcpp::SensorDataQoS());
         gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
         sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        encoders_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(encoders_topic_, rclcpp::SensorDataQoS());
 
         /*//Structs para cada um dos sonares
         sonar1_config_ = {1.0, 1.0, 0.0, 2.0, 1.0};//this->declare_parameter<ConfigSonar>("sonar1_config", {1.0, 1.0, 0.0, 2.0, 1.0});
@@ -120,6 +122,7 @@ class SerialImuNode : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr mag_pub_;
     rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sonar_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr encoders_pub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
@@ -264,29 +267,27 @@ class SerialImuNode : public rclcpp::Node
         }
         //-----------------------------------------------------------------
         
-        /*//Composição da mensagem NavSatFix (GPS):
+        //Composição da mensagem NavSatFix (GPS):
         auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
         gpsMsg->header.frame_id = "gps_link";
 
-        //Status do gps:
-        auto gpsStatusMsg = std::make_shared<sensor_msgs::msg::NavSatStatus>();
-        gpsStatusMsg->status = 0;//STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
-        gpsStatusMsg->service = 0;//SERVICE_GPS; //Define o serviço que o gps tá usando
-        gpsMsg->status = gpsStatusMsg;
+        gpsMsg->status.status = 0;//STATUS_FIX //Falta obter do gps e adicionar aqui o status real das mensagens de gps. (se referir a https://docs.ros2.org/foxy/api/sensor_msgs/msg/NavSatStatus.html)
+        gpsMsg->status.service = 0;//SERVICE_GPS; //Define o serviço que o gps tá usando
+        if (gpsMsg->status.status>=0){ //Checa se o GPS reportou que conseguiu localizar onde está
+            gpsMsg->latitude = 1.0; //graus
+            gpsMsg->longitude = 1.0; //graus
+            gpsMsg->altitude = 1.0; //metro
+            gpsMsg->position_covariance = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //Covariância das medidas do gps
+            gpsMsg->position_covariance_type = 1; //COVARIANCE_TYPE_APPROXIMATED;
 
-        gpsMsg->latitude = 1.0; //graus
-        gpsMsg->longitude = 1.0; //graus
-        gpsMsg->altitude = 1.0; //metro
-        gpsMsg->position_covariance = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //Covariância das medidas do gps
-        gpsMsg->position_covariance_type = 0;//COVARIANCE_TYPE_UNKNOWN;
+            int64_t micros_esp_gps = (int64_t) valore[] //TODO: Quando tiver parsing pronto, colocar índice correto.
+            int64_t timestamp_gps_ns = micros_esp_gps*1000LL + offset_clocks_ns;
+            gpsMsg->header.stamp = rclcpp::Time(timestamp_gps_ns);
 
-        int64_t micros_esp_gps = (int64_t) valore[] //TODO: Quando tiver parsing pronto, colocar índice correto.
-        int64_t timestamp_gps_ns = micros_esp_gps*1000LL + offset_clocks_ns;
-        gpsMsg->header.stamp = rclcpp::Time(timestamp_gps_ns);
-
-        try {gps_pub_->publish(*gpsMsg);}
-        catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
-        */
+            try {gps_pub_->publish(*gpsMsg);}
+            catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
+        }
+        else RCLCPP_INFO(this->get_logger(), "Mensagem GPS: STATUS_NO_FIX, mensagem não publicada");
         //-----------------------------------------------------------------
         /*
         //Composição da mensagem PointCloud2 (Sonar):
@@ -363,6 +364,9 @@ class SerialImuNode : public rclcpp::Node
         int64_t timestamp_encoders_ns = micros_esp_encoders*1000LL + offset_clocks_ns;
         encodersMsg->header.stamp = rclcpp::Time(timestamp_encoders_ns);
 
+        try{
+            encoder_pub_->publish(*encoderMsg);
+        } catch (...) RCLCPP_WARN(this->get_logger(), "Mensagem encoders não publicada");
         */
     
     }
