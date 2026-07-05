@@ -182,9 +182,7 @@ class SerialImuNode : public rclcpp::Node
 
         //Composição das mensagens de dados não filtrados do MPU:
         auto rawImuMsg = std::make_shared<sensor_msgs::msg::Imu>();
-        auto rawMagMsg = std::make_shared<sensor_msgs::msg::MagneticField>();
         rawImuMsg->header.frame_id = "imu_link";
-        rawMagMsg->header.frame_id = "imu_link";
 
         uint32_t sequencia = (uint32_t) valores[0];
         int64_t micros_esp_imu = (int64_t) valores[1];
@@ -216,6 +214,7 @@ class SerialImuNode : public rclcpp::Node
 
         auto rawMagMsg = std::make_shared<sensor_msgs::msg::MagneticField>();
         rawMagMsg->header.frame_id = "imu_link";
+        
         rawMagMsg->magnetic_field.x = valores[8];
         rawMagMsg->magnetic_field.y = valores[9];
         rawMagMsg->magnetic_field.z = valores[10];
