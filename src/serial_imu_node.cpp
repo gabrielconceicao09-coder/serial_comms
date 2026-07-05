@@ -32,10 +32,8 @@ class SerialImuNode : public rclcpp::Node
     {
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
-        double default_variancia_acl_ = 200*(0.0016541342577078063)**2;
-        variancia_acl_ = this->declare_parameter<double>("variancia_acl", default_variancia_acl_);
-        double default_variancia_gir_ = 200*(0.00011503473194962085)**2;
-        variancia_gir_ = this->declare_parameter<double>("variancia_gir", default_variancia_gir_);
+        variancia_acl_ = this->declare_parameter<double>("variancia_acl", 200*std::pow(0.0016541342577078063, 2.0));
+        variancia_gir_ = this->declare_parameter<double>("variancia_gir", 200*std::pow(0.00011503473194962085,2));
         variancia_mag_ = this->declare_parameter<double>("variancia_mag", 0.1);
         variancia_gps_long_ = this->declare_parameter<double>("variancia_gps_long", 1.0);
         variancia_gps_lat_ = this->declare_parameter<double>("variancia_gps_lat", 1.0);
@@ -184,7 +182,8 @@ class SerialImuNode : public rclcpp::Node
 
         //Composição das mensagens de dados não filtrados do MPU:
         auto rawImuMsg = std::make_shared<sensor_msgs::msg::Imu>();
-        imuMsg->header.frame_id = "imu_link";
+        rawImuMsg->header.frame_id = "imu_link";
+        rawMagMsg->header.frame_id = "imu_link";
 
         uint32_t sequencia = (uint32_t) valores[0];
         int64_t micros_esp_imu = (int64_t) valores[1];
