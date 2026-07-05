@@ -110,7 +110,7 @@ class SerialImuNode : public rclcpp::Node
     std::string port_, raw_imu_topic_, raw_mag_topic_, gps_topic_, sonar_topic_;
     int baudrate_;
     double variancia_acl_, variancia_gir_, variancia_mag_;
-    double variancia_gps_long_, variancia_gps_lat_, variancia_gps_alt;
+    double variancia_gps_long_, variancia_gps_lat_, variancia_gps_alt_;
     double raio_roda_esq_, raio_roda_dir_;
     //ConfigSonar sonar1_config_, sonar2_config_, sonar3_config_, sonar4_config_, sonar5_config_;
     //std::vector<ConfigSonar> sonares_;
@@ -247,8 +247,10 @@ class SerialImuNode : public rclcpp::Node
         if (timestamp_imu_ns <= ultimo_timestamp_imu_ns){
             RCLCPP_WARN(this->get_logger(), "Timestamps invertidos, somando 1 ns para tentar garantir monotonicidade. dt: %li", timestamp_imu_ns-ultimo_timestamp_imu_ns);
             timestamp_imu_ns = ultimo_timestamp_imu_ns + 1;
-        }*/
+        }
         ultimo_timestamp_imu_ns = timestamp_imu_ns;
+        */
+        
 
         rawImuMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
         rawMagMsg->header.stamp = rclcpp::Time(timestamp_imu_ns);
