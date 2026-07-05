@@ -32,8 +32,10 @@ class SerialImuNode : public rclcpp::Node
     {
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
-        variancia_acl_ = this->declare_parameter<double>("variancia_acl", 200*(0.0016541342577078063)**2);
-        variancia_gir_ = this->declare_parameter<double>("variancia_gir", 200*(0.00011503473194962085)**2);
+        double default_variancia_acl_ = 200*(0.0016541342577078063)**2;
+        variancia_acl_ = this->declare_parameter<double>("variancia_acl", default_variancia_acl_);
+        double default_variancia_gir_ = 200*(0.00011503473194962085)**2;
+        variancia_gir_ = this->declare_parameter<double>("variancia_gir", default_variancia_gir_);
         variancia_mag_ = this->declare_parameter<double>("variancia_mag", 0.1);
         variancia_gps_long_ = this->declare_parameter<double>("variancia_gps_long", 1.0);
         variancia_gps_lat_ = this->declare_parameter<double>("variancia_gps_lat", 1.0);
