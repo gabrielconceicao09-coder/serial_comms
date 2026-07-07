@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 include_directories(include
 	include/serial_comms
@@ -30,8 +31,8 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(serial_imu_node
-	src/serial_imu_node.cpp
+add_executable(serial_sensors_node
+	src/serial_sensors_node.cpp
 	src/serial.cc
 	src/impl/unix.cc
 	src/impl/win.cc
@@ -39,13 +40,35 @@ add_executable(serial_imu_node
 	src/impl/list_ports/list_ports_osx.cc
 	src/impl/list_ports/list_ports_win.cc
 )
-##target_link_libraries(serial_imu_node PUBLIC #para rodar no foxy
+##target_link_libraries(serial_sensors_node PUBLIC #para rodar no foxy
 ##rclcpp::rclcpp
 ##sensor_msgs
+##geometry_msgs
 ##)
-ament_target_dependencies(serial_imu_node #para rodar no kilted
+ament_target_dependencies(serial_sensors_node #para rodar no kilted
 rclcpp
 sensor_msgs
+geometry_msgs
+)
+
+add_executable(serial_motors_node
+	src/serial_motors_node.cpp
+	src/serial.cc
+	src/impl/unix.cc
+	src/impl/win.cc
+	src/impl/list_ports/list_ports_linux.cc
+	src/impl/list_ports/list_ports_osx.cc
+	src/impl/list_ports/list_ports_win.cc
+)
+##target_link_libraries(serial_motors_node PUBLIC #para rodar no foxy
+##rclcpp::rclcpp
+##sensor_msgs
+##geometry_msgs
+##)
+ament_target_dependencies(serial_motors_node #para rodar no kilted
+rclcpp
+sensor_msgs
+geometry_msgs
 )
 
 add_executable(image_restamper_node
@@ -57,7 +80,11 @@ sensor_msgs
 )
 
 
-install(TARGETS serial_imu_node
+install(TARGETS serial_sensors_node
+DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS serial_motors_node
 DESTINATION lib/${PROJECT_NAME}
 )
 
