@@ -37,8 +37,8 @@ class SerialMotorsNode : public rclcpp::Node
         axis_frame_ = this->declare_parameter<std::string>("axis_frame", "base_link"); //Frame do eixo. Como normalmente é a referência, base_link (centro do eixo na base do robô)
         
         encoders_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(encoders_topic_, rclcpp::SensorDataQoS());
-        commandsEsq_sub_ = this->create_subscription<float>(commandsEsq_topic_, 10, std::bind(&SerialMotorsNode::CommandSubEsq_callback, this, std::placeholders::_1)); 
-        commandsDir_sub_ = this->create_subscription<float>(commandsDir_topic_, 10, std::bind(&SerialMotorsNode::CommandSubDir_callback, this, std::placeholders::_1)); 
+        commandsEsq_sub_ = this->create_subscription<std_msgs::msg::Float32>(commandsEsq_topic_, 10, std::bind(&SerialMotorsNode::CommandSubEsq_callback, this, std::placeholders::_1)); 
+        commandsDir_sub_ = this->create_subscription<std_msgs::msg::Float32>(commandsDir_topic_, 10, std::bind(&SerialMotorsNode::CommandSubDir_callback, this, std::placeholders::_1)); 
 
         try
         {
@@ -208,9 +208,9 @@ class SerialMotorsNode : public rclcpp::Node
     
     }
     
-    void CommandSubEsq_callback(float msg)
+    void CommandSubEsq_callback(std_msgs::msg::Float32 msg)
     {
-        const std::string rpm_ref_esq_s = std::to_string(msg);
+        const std::string rpm_ref_esq_s = std::to_string(msg->data);
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
@@ -219,9 +219,9 @@ class SerialMotorsNode : public rclcpp::Node
         bytes_escritos += serial_.write(linebreak);
     }
 
-    void CommandSubDir_callback(float msg)
+    void CommandSubDir_callback(std_msgs::msg::Float32 msg)
     {
-        const std::string rpm_ref_dir_s = std::to_string(msg);
+        const std::string rpm_ref_dir_s = std::to_string(msg->data);
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 
