@@ -1,4 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/float32.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/nav_sat_status.hpp"
@@ -210,7 +211,7 @@ class SerialMotorsNode : public rclcpp::Node
     
     void CommandSubEsq_callback(std_msgs::msg::Float32 msg)
     {
-        const std::string rpm_ref_esq_s = std::to_string(msg->data);
+        const std::string rpm_ref_esq_s = std::to_string(msg.data);
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
@@ -221,7 +222,7 @@ class SerialMotorsNode : public rclcpp::Node
 
     void CommandSubDir_callback(std_msgs::msg::Float32 msg)
     {
-        const std::string rpm_ref_dir_s = std::to_string(msg->data);
+        const std::string rpm_ref_dir_s = std::to_string(msg.data);
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 
