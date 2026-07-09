@@ -99,7 +99,7 @@ class SerialMotorsNode : public rclcpp::Node
     bool primeira_leitura = true;
     int64_t offset_clocks_ns;
     double offset_alpha_ = 0.01;
-    uint32_t ultima_seq_encoder = 0;
+    uint32_t ultima_seq_encoders = 0;
 
 
     void ReadPub_callback()
@@ -139,9 +139,9 @@ class SerialMotorsNode : public rclcpp::Node
             return;
         }
 
-        if (valores.size() != ) 
+        if (valores.size() != 6) 
         {
-            RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %i", line.c_str(), valores.size());
+            RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %li", line.c_str(), valores.size());
             return; 
         }
         //----------------------------------------------------------------------------
@@ -166,7 +166,7 @@ class SerialMotorsNode : public rclcpp::Node
                 offset_clocks_ns = (int64_t) offset_clocks_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_encoders*1000LL)*offset_alpha_;
             }
                 
-            auto encodersMsg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
+            auto encoderMsg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
 
             encoderMsg->header.frame_id = axis_frame_;
 
@@ -202,8 +202,8 @@ class SerialMotorsNode : public rclcpp::Node
             encodersMsg->header.stamp = rclcpp::Time(timestamp_encoders_ns);
 
             try{
-                encoder_pub_->publish(*encoderMsg);
-            } catch (...) RCLCPP_WARN(this->get_logger(), "Mensagem encoders não publicada");
+                encoders_pub_->publish(*encoderMsg);
+            } catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem encoders não publicada");}
         }
     
     }
@@ -214,9 +214,9 @@ class SerialMotorsNode : public rclcpp::Node
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
-        size_t bytes_escritos = serial_.write(&marcador_esq);
-        bytes_escritos += serial_.write(&rpm_ref_esq_s);
-        bytes_escritos += serial_.write(&linebreak);
+        size_t bytes_escritos = serial_.write(*marcador_esq);
+        bytes_escritos += serial_.write(*rpm_ref_esq_s);
+        bytes_escritos += serial_.write(*linebreak);
     }
 
     void CommandSubDir_callback(geometry_msgs::msg::Twist msg)
@@ -225,9 +225,9 @@ class SerialMotorsNode : public rclcpp::Node
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 
-        size_t bytes_escritos += serial_.write(&marcador_dir);
-        bytes_escritos += serial_.write(&rpm_ref_dir_s);
-        bytes_escritos += serial_.write(&linebreak);
+        size_t bytes_escritos += serial_.write(*marcador_dir);
+        bytes_escritos += serial_.write(*rpm_ref_dir_s);
+        bytes_escritos += serial_.write(*linebreak);
     }
 };
 
