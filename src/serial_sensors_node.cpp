@@ -332,55 +332,55 @@ class SerialSensorsNode : public rclcpp::Node
             sonarMsg5->max_range = max_range_sonar_;
 
             float range1 = (float) valores[13];
-            if (range1<min_range_sonar_){
-                range1 = -std::numeric_limits<float>::infinity();
-                sonarMsg1->range = range1;
-            } else if (range1>max_range_sonar_){
+            if (range1>max_range_sonar_ || range1<0.0){
                 range1 = std::numeric_limits<float>::infinity();
+                sonarMsg1->range = range1;
+            } else if (range1<min_range_sonar_){
+                range1 = -std::numeric_limits<float>::infinity();
                 sonarMsg1->range = range1;
             } else {
                 sonarMsg1->range = range1;
             }
 
             float range2 = (float) valores[14];
-            if (range2<min_range_sonar_){
-                range2 = -std::numeric_limits<float>::infinity();
-                sonarMsg2->range = range2;
-            } else if (range2>max_range_sonar_){
+            if (range2>max_range_sonar_ || range2<0.0){
                 range2 = std::numeric_limits<float>::infinity();
+                sonarMsg2->range = range2;
+            } else if (range2<min_range_sonar_){
+                range2 = -std::numeric_limits<float>::infinity();
                 sonarMsg2->range = range2;
             } else {
                 sonarMsg2->range = range2;
             }
 
             float range3 = (float) valores[15];
-            if (range3<min_range_sonar_){
-                range3 = -std::numeric_limits<float>::infinity();
-                sonarMsg3->range = range3;
-            } else if (range3>max_range_sonar_){
+            if (range3>max_range_sonar_ || range3<0.0){
                 range3 = std::numeric_limits<float>::infinity();
+                sonarMsg3->range = range3;
+            } else if (range3<min_range_sonar_){
+                range3 = -std::numeric_limits<float>::infinity();
                 sonarMsg3->range = range3;
             } else {
                 sonarMsg3->range = range3;
             }
 
             float range4 = (float) valores[16];
-            if (range4<min_range_sonar_){
-                range4 = -std::numeric_limits<float>::infinity();
-                sonarMsg4->range = range4;
-            } else if (range4>max_range_sonar_){
+            if (range4>max_range_sonar_ || range4<0.0){
                 range4 = std::numeric_limits<float>::infinity();
+                sonarMsg4->range = range4;
+            } else if (range4<min_range_sonar_){
+                range4 = -std::numeric_limits<float>::infinity();
                 sonarMsg4->range = range4;
             } else {
                 sonarMsg4->range = range4;
             }
 
             float range5 = (float) valores[17];
-            if (range5<min_range_sonar_){
-                range5 = -std::numeric_limits<float>::infinity();
-                sonarMsg5->range = range5;
-            } else if (range5>max_range_sonar_){
+            if (range5>max_range_sonar_ || range5<0.0){
                 range5 = std::numeric_limits<float>::infinity();
+                sonarMsg5->range = range5;
+            } else if (range5<min_range_sonar_){
+                range5 = -std::numeric_limits<float>::infinity();
                 sonarMsg5->range = range5;
             } else {
                 sonarMsg5->range = range5;
