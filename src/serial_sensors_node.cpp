@@ -292,7 +292,7 @@ class SerialSensorsNode : public rclcpp::Node
                 catch (...) {RCLCPP_WARN(this->get_logger(), "Mensagem GPS não publicada");}
             }
             else RCLCPP_INFO(this->get_logger(), "Mensagem GPS: STATUS_NO_FIX, mensagem não publicada");
-        }
+        } else RCLCPP_INGO(this-get_logger(), "Sequência GPS menor ou igual à anterior, mensagem não publicada");
 
         //-----------------------------------------------------------------
         
