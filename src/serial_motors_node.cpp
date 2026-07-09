@@ -151,7 +151,7 @@ class SerialMotorsNode : public rclcpp::Node
             
         //Composição mensagem Twist dos encoders:
         uint32_t micros_esp_encoders = (uint32_t) valores[0];
-        uint32_t sequencia_encoderEsq = (uint32_t) valores[1];
+        uint32_t sequencia_encoders = (uint32_t) valores[1];
     
         if (sequencia_encoders>ultima_seq_encoders){
             ultima_seq_encoders = sequencia_encoders;
@@ -208,31 +208,26 @@ class SerialMotorsNode : public rclcpp::Node
     
     }
     
-    void CommandSub_callback(geometry_msgs::msg::Twist msg)
+    void CommandSubEsq_callback(geometry_msgs::msg::Twist msg)
     {
-        float vel_linearx = msg.linear.x;
-        float vel_lineary = msg.linear.y;
-        float vel_linearz = msg.linear.z;
-
-        float vel_angx = msg.angular.x;
-        float vel_angy = msg.angular.y;
-        float vel_angz = msg.angular.z;
-
-        //TODO: Cálculo das velocidades necessárias;
-        float rpm_ref_esq = 100.0;
-        float rpm_ref_dir = 100.0;
-
-        const std::string rpm_ref_esq_s = std::to_string(rpm_ref_esq);
-        const std::string rpm_ref_dir_s = std::to_string(rpm_ref_dir);
-        const std::string marcador_esq = "E";
-        const std::string marcador_dir = "D";
+        const std::string rpm_ref_esq_s = std::to_string(msg.float);
+        const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
         size_t bytes_escritos = serial_.write(&marcador_esq);
         bytes_escritos += serial_.write(&rpm_ref_esq_s);
         bytes_escritos += serial_.write(&linebreak);
-        bytes_escritos += serial_.write(&marcador_dir);
+    }
+
+    void CommandSubDir_callback(geometry_msgs::msg::Twist msg)
+    {
+        const std::string rpm_ref_dir_s = std::to_string(msg.float);
+        const std::string marcador_dir = "D:";
+        const std::string linebreak = "\n";
+
+        size_t bytes_escritos += serial_.write(&marcador_dir);
         bytes_escritos += serial_.write(&rpm_ref_dir_s);
+        bytes_escritos += serial_.write(&linebreak);
     }
 };
 
