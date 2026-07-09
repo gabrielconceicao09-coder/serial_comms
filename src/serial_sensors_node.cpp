@@ -55,7 +55,7 @@ class SerialSensorsNode : public rclcpp::Node
         imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>(raw_imu_topic_, rclcpp::SensorDataQoS());
         mag_pub_ = this->create_publisher<sensor_msgs::msg::MagneticField>(raw_mag_topic_, rclcpp::SensorDataQoS());
         gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(gps_topic_, rclcpp::SensorDataQoS());
-        sonar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(sonar_topic_, rclcpp::SensorDataQoS());
+        sonar_pub_ = this->create_publisher<sensor_msgs::msg::Range>(sonar_topic_, rclcpp::SensorDataQoS());
         
         try
         {
