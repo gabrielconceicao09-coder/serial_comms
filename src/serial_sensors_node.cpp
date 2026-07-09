@@ -17,7 +17,7 @@
 
 using namespace std::chrono_literals;
 
-class SerialImuNode : public rclcpp::Node
+class SerialSensorsNode : public rclcpp::Node
 {
     public:
     SerialSensorsNode() : Node("serial_sensors_node") 
@@ -334,7 +334,7 @@ class SerialImuNode : public rclcpp::Node
             float range1 = (float) valores[20];
             if (range1<min_range_sonar_){
                 range1 = -std::numeric_limits<float>::infinity();
-            } else if (range1>max_range_sonar){
+            } else if (range1>max_range_sonar_){
                 range1 = std::numeric_limits<float>::infinity();
             } else {
                 sonarMsg1.range = range1;
@@ -343,7 +343,7 @@ class SerialImuNode : public rclcpp::Node
             float range2 = (float) valores[21];
             if (range2<min_range_sonar_){
                 range2 = -std::numeric_limits<float>::infinity();
-            } else if (range1>max_range_sonar){
+            } else if (range1>max_range_sonar_){
                 range2 = std::numeric_limits<float>::infinity();
             } else {
                 sonarMsg2.range = range2;
@@ -352,7 +352,7 @@ class SerialImuNode : public rclcpp::Node
             float range3 = (float) valores[22];
             if (range3<min_range_sonar_){
                 range3 = -std::numeric_limits<float>::infinity();
-            } else if (range1>max_range_sonar){
+            } else if (range1>max_range_sonar_){
                 range3 = std::numeric_limits<float>::infinity();
             } else {
                 sonarMsg3.range = range3;
@@ -361,7 +361,7 @@ class SerialImuNode : public rclcpp::Node
             float range4 = (float) valores[23];
             if (range4<min_range_sonar_){
                 range4 = -std::numeric_limits<float>::infinity();
-            } else if (range1>max_range_sonar){
+            } else if (range1>max_range_sonar_){
                 range4 = std::numeric_limits<float>::infinity();
             } else {
                 sonarMsg4.range = range4;
@@ -370,7 +370,7 @@ class SerialImuNode : public rclcpp::Node
             float range5 = (float) valores[24];
             if (range5<min_range_sonar_){
                 range5 = -std::numeric_limits<float>::infinity();
-            } else if (range5>max_range_sonar){
+            } else if (range5>max_range_sonar_){
                 range5 = std::numeric_limits<float>::infinity();
             } else {
                 sonarMsg5.range = range5;

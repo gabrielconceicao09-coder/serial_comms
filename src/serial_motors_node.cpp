@@ -18,7 +18,7 @@
 
 using namespace std::chrono_literals;
 
-class SerialImuNode : public rclcpp::Node
+class SerialMotorsNode : public rclcpp::Node
 {
     public:
     SerialMotorsNode() : Node("serial_motors_node") 
@@ -31,12 +31,14 @@ class SerialImuNode : public rclcpp::Node
         raio_roda_dir_ = this->declare_parameter<double>("raio_roda_dir", 0.125); //em metros 
 
         encoders_topic_ = this->declare_parameter<std::string>("encoders_topic", "encoders/twist_raw");
-        commands_topic_ = this->declare_parameter<std::string>("commands_topic", "nav2/commands");
+        commandsEsq_topic_ = this->declare_parameter<std::string>("commandsEsq_topic", "nav2/commands/esq");
+        commandsDir_topic_ = this->declare_parameter<std::string>("commandsDir_topic", "nav2/commands/dir");
 
         axis_frame_ = this->declare_parameter<std::string>("axis_frame", "base_link"); //Frame do eixo. Como normalmente é a referência, base_link (centro do eixo na base do robô)
         
         encoders_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(encoders_topic_, rclcpp::SensorDataQoS());
-        commands_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(commands_topic_, 10, std::bind(&SerialMotorsNode::CommandSub_callback, this, _1)); //TODO: Checar como são os comandos do Nav2
+        commandsEsq_sub_ = this->create_subscription<float>(commandsEsq_topic_, 10, std::bind(&SerialMotorsNode::CommandSubEsq_callback, this, std::placeholders::_1)); 
+        commandsDir_sub_ = this->create_subscription<float>(commandsDir_topic_, 10, std::bind(&SerialMotorsNode::CommandSubDir_callback, this, std::placeholders::_1)); 
 
         try
         {
@@ -75,7 +77,7 @@ class SerialImuNode : public rclcpp::Node
 
     private:
     //Parâmetros:
-    std::string port_, raw_imu_topic_, raw_mag_topic_, gps_topic_, sonar_topic_;
+    std::string port_, encoders_topic_, commandsEsq_topic_, commandsDir_topic_;
     int baudrate_;
     double variancia_encoders_;
     double raio_roda_esq_, raio_roda_dir_;
@@ -88,7 +90,8 @@ class SerialImuNode : public rclcpp::Node
     rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr encoders_pub_;
 
     //Subscriptions:
-    rclcpp::Subscription<geometry_msg::msg::Twist>::SharedPtr commands_sub_;
+    rclcpp::Subscription<float>::SharedPtr commandsEsq_sub_;
+    rclcpp::Subscription<float>::SharedPtr commandsDir_sub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
