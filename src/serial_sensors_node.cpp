@@ -307,29 +307,29 @@ class SerialSensorsNode : public rclcpp::Node
             auto sonarMsg4 = std::make_shared<sensor_msgs::msg::Range>();
             auto sonarMsg5 = std::make_shared<sensor_msgs::msg::Range>();
 
-            sonarMsg1.radiation_type = 0; //0: ULTRASOUND
-            sonarMsg2.radiation_type = 0; 
-            sonarMsg3.radiation_type = 0; 
-            sonarMsg4.radiation_type = 0; 
-            sonarMsg5.radiation_type = 0; 
-
-            sonarMsg1.field_of_view = fov_sonar_;
-            sonarMsg2.field_of_view = fov_sonar_;
-            sonarMsg3.field_of_view = fov_sonar_;
-            sonarMsg4.field_of_view = fov_sonar_;
-            sonarMsg5.field_of_view = fov_sonar_;
-
-            sonarMsg1.min_range = min_range_sonar_;
-            sonarMsg2.min_range = min_range_sonar_;
-            sonarMsg3.min_range = min_range_sonar_;
-            sonarMsg4.min_range = min_range_sonar_;
-            sonarMsg5.min_range = min_range_sonar_;
-
-            sonarMsg1.max_range = max_range_sonar_;
-            sonarMsg2.max_range = max_range_sonar_;
-            sonarMsg3.max_range = max_range_sonar_;
-            sonarMsg4.max_range = max_range_sonar_;
-            sonarMsg5.max_range = max_range_sonar_;
+            sonarMsg1->radiation_type = 0; //0: ULTRASOUND
+            sonarMsg2->radiation_type = 0; 
+            sonarMsg3->radiation_type = 0; 
+            sonarMsg4->radiation_type = 0; 
+            sonarMsg5->radiation_type = 0; 
+->
+            sonarMsg1->field_of_view = fov_sonar_;
+            sonarMsg2->field_of_view = fov_sonar_;
+            sonarMsg3->field_of_view = fov_sonar_;
+            sonarMsg4->field_of_view = fov_sonar_;
+            sonarMsg5->field_of_view = fov_sonar_;
+->
+            sonarMsg1->min_range = min_range_sonar_;
+            sonarMsg2->min_range = min_range_sonar_;
+            sonarMsg3->min_range = min_range_sonar_;
+            sonarMsg4->min_range = min_range_sonar_;
+            sonarMsg5->min_range = min_range_sonar_;
+->
+            sonarMsg1->max_range = max_range_sonar_;
+            sonarMsg2->max_range = max_range_sonar_;
+            sonarMsg3->max_range = max_range_sonar_;
+            sonarMsg4->max_range = max_range_sonar_;
+            sonarMsg5->max_range = max_range_sonar_;
 
             float range1 = (float) valores[20];
             if (range1<min_range_sonar_){
@@ -337,7 +337,7 @@ class SerialSensorsNode : public rclcpp::Node
             } else if (range1>max_range_sonar_){
                 range1 = std::numeric_limits<float>::infinity();
             } else {
-                sonarMsg1.range = range1;
+                sonarMsg1->range = range1;
             }
 
             float range2 = (float) valores[21];
@@ -346,7 +346,7 @@ class SerialSensorsNode : public rclcpp::Node
             } else if (range1>max_range_sonar_){
                 range2 = std::numeric_limits<float>::infinity();
             } else {
-                sonarMsg2.range = range2;
+                sonarMsg2->range = range2;
             }
 
             float range3 = (float) valores[22];
@@ -355,7 +355,7 @@ class SerialSensorsNode : public rclcpp::Node
             } else if (range1>max_range_sonar_){
                 range3 = std::numeric_limits<float>::infinity();
             } else {
-                sonarMsg3.range = range3;
+                sonarMsg3->range = range3;
             }
 
             float range4 = (float) valores[23];
@@ -364,7 +364,7 @@ class SerialSensorsNode : public rclcpp::Node
             } else if (range1>max_range_sonar_){
                 range4 = std::numeric_limits<float>::infinity();
             } else {
-                sonarMsg4.range = range4;
+                sonarMsg4->range = range4;
             }
 
             float range5 = (float) valores[24];
@@ -373,7 +373,7 @@ class SerialSensorsNode : public rclcpp::Node
             } else if (range5>max_range_sonar_){
                 range5 = std::numeric_limits<float>::infinity();
             } else {
-                sonarMsg5.range = range5;
+                sonarMsg5->range = range5;
             }
 
             int64_t micros_esp_sonares = (int64_t) valores[19];
