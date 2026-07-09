@@ -27,9 +27,9 @@ class SerialMotorsNode : public rclcpp::Node
         port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
         baudrate_ = this->declare_parameter<int>("baudrate", 921600);
 
-        variancia_encoders_ = this->declare_parameter<double>("variancia_encoders", 1.0); //TODO: Melhor estimativa para a covariância
-        raio_roda_esq_ = this->declare_parameter<double>("raio_roda_esq", 0.125); //em metros
-        raio_roda_dir_ = this->declare_parameter<double>("raio_roda_dir", 0.125); //em metros 
+        variancia_encoders_ = this->declare_parameter<double>("variancia_encoders", 10.0); //TODO: Melhor estimativa para a covariância
+        raio_rodas_ = this->declare_parameter<double>("raio_rodas", 0.065); //em metros 
+        dist_rodas_ = this->declare_parameter<double>("dist_rodas", 0.473); //m
 
         encoders_topic_ = this->declare_parameter<std::string>("encoders_topic", "encoders/twist_raw");
         commandsEsq_topic_ = this->declare_parameter<std::string>("commandsEsq_topic", "nav2/commands/esq");
@@ -81,7 +81,7 @@ class SerialMotorsNode : public rclcpp::Node
     std::string port_, encoders_topic_, commandsEsq_topic_, commandsDir_topic_;
     int baudrate_;
     double variancia_encoders_;
-    double raio_roda_esq_, raio_roda_dir_;
+    double raio_rodas_, dist_rodas_;
 
     std::string axis_frame_;
 
@@ -174,12 +174,18 @@ class SerialMotorsNode : public rclcpp::Node
             double rpm_esq = valores[2];
             double rpm_dir = valores[5];
             //TODO: calcular velocidade angular e velocidade linear do robô
+            double rad_s_esq = rpm_esq*3.1415926/30.0; 
+            double rad_s_dir = rpm_dir*3.1415926/30.0;
 
+            double vel_linear_x = raio_rodas_*(rad_s_esq+rad_s_dir)/2; //De acordo com o modelo cinemático do robô
+            double vel_angular_z = raio_rodas_*(rad_s_dir-rad_s_esq)/dist_rodas_;
+
+            //XYZ na convenção do ROS2 é x frente, y esquerda e z para cima do frame de referência (nesse caso, base_link)
             encoderMsg->twist.twist.angular.x = 0.0;
             encoderMsg->twist.twist.angular.y = 0.0;
-            encoderMsg->twist.twist.angular.z = rpm_esq; //ERRADO
-            encoderMsg->twist.twist.linear.x = rpm_esq; //ERRADO
-            encoderMsg->twist.twist.linear.y = rpm_dir; //ERRADO
+            encoderMsg->twist.twist.angular.z = vel_angular_z;
+            encoderMsg->twist.twist.linear.x = vel_linear_x;
+            encoderMsg->twist.twist.linear.y = 0.0;
             encoderMsg->twist.twist.linear.z = 0.0;
             encoderMsg->twist.covariance[0] = variancia_encoders_; //TODO: Checar/melhorar variância dos encoders (acho que deve ser alta) 
             encoderMsg->twist.covariance[1] = 0.0; encoderMsg->twist.covariance[2] = 0.0; encoderMsg->twist.covariance[3] = 0.0; 
