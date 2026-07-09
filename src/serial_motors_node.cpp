@@ -70,7 +70,7 @@ class SerialMotorsNode : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "Timer criado com callback");        
     }
 
-    ~SerialImuNode()
+    ~SerialMotorsNode()
     {
 
     }
@@ -99,7 +99,7 @@ class SerialMotorsNode : public rclcpp::Node
     bool primeira_leitura = true;
     int64_t offset_clocks_ns;
     double offset_alpha_ = 0.01;
-    uint32_t ultima_seq_encoders = 0;
+    uint32_t ultima_seq_encoder = 0;
 
 
     void ReadPub_callback()
@@ -150,18 +150,20 @@ class SerialMotorsNode : public rclcpp::Node
         rclcpp::Time tempo_ros = rclcpp::Clock(RCL_SYSTEM_TIME).now();
             
         //Composição mensagem Twist dos encoders:
-        uint32_t sequencia_encoders = (uint32_t) valores[0];
+        uint32_t micros_esp_encoders = (uint32_t) valores[0];
+        uint32_t sequencia_encoderEsq = (uint32_t) valores[1];
+    
         if (sequencia_encoders>ultima_seq_encoders){
             ultima_seq_encoders = sequencia_encoders;
 
             //Composição do tempo de aquisição no relógio do sistema:
             if (primeira_leitura){
-                offset_clocks_ns = tempo_ros.nanoseconds() - micros_esp_imu*1000LL;
+                offset_clocks_ns = tempo_ros.nanoseconds() - micros_esp_encoders*1000LL;
                 primeira_leitura = false;
             }
             else{
                 //Ajuste contínuo do offset:
-                offset_clocks_ns = (int64_t) offset_clocks_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_imu*1000LL)*offset_alpha_;
+                offset_clocks_ns = (int64_t) offset_clocks_ns*(1-offset_alpha_) + (tempo_ros.nanoseconds() - micros_esp_encoders*1000LL)*offset_alpha_;
             }
                 
             auto encodersMsg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
@@ -169,7 +171,7 @@ class SerialMotorsNode : public rclcpp::Node
             encoderMsg->header.frame_id = axis_frame_;
 
             double rpm_esq = valores[2];
-            double rpm_dir = valores[3];
+            double rpm_dir = valores[5];
             //TODO: calcular velocidade angular e velocidade linear do robô
 
             encoderMsg->twist.twist.angular.x = 0.0;

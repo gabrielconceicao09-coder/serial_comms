@@ -88,7 +88,7 @@ class SerialSensorsNode : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "Timer criado com callback");        
     }
 
-    ~SerialImuNode()
+    ~SerialSensorsNode()
     {
 
     }
