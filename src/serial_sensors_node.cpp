@@ -42,7 +42,7 @@ class SerialSensorsNode : public rclcpp::Node
         raw_imu_topic_ = this->declare_parameter<std::string>("raw_imu_topic", "imu/data_raw");
         raw_mag_topic_ = this->declare_parameter<std::string>("raw_mag_topic", "imu/mag");
         gps_topic_ = this->declare_parameter<std::string>("gps_topic", "gps/fix_raw");
-        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/");
+        sonar_topic_ = this->declare_parameter<std::string>("sonar_topic", "sonar/raw");
         
         imu_frame_ = this->declare_parameter<std::string>("imu_frame", "imu_link");
         gps_frame_ = this->declare_parameter<std::string>("gps_frame", "gps_link");
