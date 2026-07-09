@@ -91,8 +91,8 @@ class SerialMotorsNode : public rclcpp::Node
     rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr encoders_pub_;
 
     //Subscriptions:
-    rclcpp::Subscription<float>::SharedPtr commandsEsq_sub_;
-    rclcpp::Subscription<float>::SharedPtr commandsDir_sub_;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr commandsEsq_sub_;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr commandsDir_sub_;
 
     rclcpp::TimerBase::SharedPtr timer_;
 
