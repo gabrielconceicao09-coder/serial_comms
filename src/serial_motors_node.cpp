@@ -210,24 +210,24 @@ class SerialMotorsNode : public rclcpp::Node
     
     void CommandSubEsq_callback(geometry_msgs::msg::Twist msg)
     {
-        const std::string rpm_ref_esq_s = std::to_string(msg.float);
+        const std::string rpm_ref_esq_s = std::to_string(msg->float);
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
-        size_t bytes_escritos = serial_.write(*marcador_esq);
-        bytes_escritos += serial_.write(*rpm_ref_esq_s);
-        bytes_escritos += serial_.write(*linebreak);
+        size_t bytes_escritos = serial_.write(marcador_esq);
+        bytes_escritos += serial_.write(rpm_ref_esq_s);
+        bytes_escritos += serial_.write(linebreak);
     }
 
     void CommandSubDir_callback(geometry_msgs::msg::Twist msg)
     {
-        const std::string rpm_ref_dir_s = std::to_string(msg.float);
+        const std::string rpm_ref_dir_s = std::to_string(msg->float);
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 
-        size_t bytes_escritos += serial_.write(*marcador_dir);
-        bytes_escritos += serial_.write(*rpm_ref_dir_s);
-        bytes_escritos += serial_.write(*linebreak);
+        size_t bytes_escritos = serial_.write(marcador_dir);
+        bytes_escritos += serial_.write(rpm_ref_dir_s);
+        bytes_escritos += serial_.write(linebreak);
     }
 };
 

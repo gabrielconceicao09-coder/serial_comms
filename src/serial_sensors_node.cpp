@@ -312,19 +312,19 @@ class SerialSensorsNode : public rclcpp::Node
             sonarMsg3->radiation_type = 0; 
             sonarMsg4->radiation_type = 0; 
             sonarMsg5->radiation_type = 0; 
-->
+
             sonarMsg1->field_of_view = fov_sonar_;
             sonarMsg2->field_of_view = fov_sonar_;
             sonarMsg3->field_of_view = fov_sonar_;
             sonarMsg4->field_of_view = fov_sonar_;
             sonarMsg5->field_of_view = fov_sonar_;
-->
+
             sonarMsg1->min_range = min_range_sonar_;
             sonarMsg2->min_range = min_range_sonar_;
             sonarMsg3->min_range = min_range_sonar_;
             sonarMsg4->min_range = min_range_sonar_;
             sonarMsg5->min_range = min_range_sonar_;
-->
+
             sonarMsg1->max_range = max_range_sonar_;
             sonarMsg2->max_range = max_range_sonar_;
             sonarMsg3->max_range = max_range_sonar_;
