@@ -379,17 +379,17 @@ class SerialSensorsNode : public rclcpp::Node
             int64_t micros_esp_sonares = (int64_t) valores[19];
             int64_t timestamp_sonares_ns = micros_esp_sonares*1000LL + offset_clocks_ns;
 
-            sonarMsg1.header.stamp = rclcpp::Time(timestamp_sonares_ns);
-            sonarMsg2.header.stamp = rclcpp::Time(timestamp_sonares_ns);
-            sonarMsg3.header.stamp = rclcpp::Time(timestamp_sonares_ns);
-            sonarMsg4.header.stamp = rclcpp::Time(timestamp_sonares_ns);
-            sonarMsg5.header.stamp = rclcpp::Time(timestamp_sonares_ns);
+            sonarMsg1->header.stamp = rclcpp::Time(timestamp_sonares_ns);
+            sonarMsg2->header.stamp = rclcpp::Time(timestamp_sonares_ns);
+            sonarMsg3->header.stamp = rclcpp::Time(timestamp_sonares_ns);
+            sonarMsg4->header.stamp = rclcpp::Time(timestamp_sonares_ns);
+            sonarMsg5->header.stamp = rclcpp::Time(timestamp_sonares_ns);
             
-            sonarMsg1.header.frame_id = sonar1_frame_;
-            sonarMsg2.header.frame_id = sonar2_frame_;
-            sonarMsg3.header.frame_id = sonar3_frame_;
-            sonarMsg4.header.frame_id = sonar4_frame_;
-            sonarMsg5.header.frame_id = sonar5_frame_;
+            sonarMsg1->header.frame_id = sonar1_frame_;
+            sonarMsg2->header.frame_id = sonar2_frame_;
+            sonarMsg3->header.frame_id = sonar3_frame_;
+            sonarMsg4->header.frame_id = sonar4_frame_;
+            sonarMsg5->header.frame_id = sonar5_frame_;
 
             try {
                 sonar_pub_->publish(*sonarMsg1);
