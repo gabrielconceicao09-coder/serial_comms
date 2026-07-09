@@ -265,7 +265,7 @@ class SerialSensorsNode : public rclcpp::Node
         //-----------------------------------------------------------------
         
         //Composição da mensagem NavSatFix (GPS):
-        uint32_t sequencia_gps = valores[11];
+        uint32_t sequencia_gps = valores[18];
 
         if (sequencia_gps>ultima_seq_gps){
             ultima_seq_gps = sequencia_gps;
@@ -273,18 +273,18 @@ class SerialSensorsNode : public rclcpp::Node
             auto gpsMsg = std::make_shared<sensor_msgs::msg::NavSatFix>();
             gpsMsg->header.frame_id = gps_frame_;
 
-            int fix = (int) valores[17];
+            int fix = (int) valores[24];
             gpsMsg->status.status = fix ? 0 : -1; //STATUS_FIX: 0 se tem posição não _augmented_ e -1 se não tem posição
             gpsMsg->status.service = 1;//SERVICE_GPS: Define o serviço que o gps tá usando. 1: GPS
 
             if (gpsMsg->status.status>=0){ //Checa se o GPS reportou que conseguiu localizar onde está
-                gpsMsg->latitude = valores[13]; //graus
-                gpsMsg->longitude = valores[14]; //graus
-                gpsMsg->altitude = valores[15]; //metro
+                gpsMsg->latitude = valores[20]; //graus
+                gpsMsg->longitude = valores[21]; //graus
+                gpsMsg->altitude = valores[22]; //metro
                 gpsMsg->position_covariance = {2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0}; //Covariância das medidas do gps
                 gpsMsg->position_covariance_type = 1; //COVARIANCE_TYPE_APPROXIMATED;
 
-                int64_t micros_esp_gps = (int64_t) valores[12]; //TODO: Quando tiver parsing pronto, colocar índice correto.
+                int64_t micros_esp_gps = (int64_t) valores[19]; //TODO: Quando tiver parsing pronto, colocar índice correto.
                 int64_t timestamp_gps_ns = micros_esp_gps*1000LL + offset_clocks_ns;
                 gpsMsg->header.stamp = rclcpp::Time(timestamp_gps_ns);
 
@@ -297,7 +297,7 @@ class SerialSensorsNode : public rclcpp::Node
         //-----------------------------------------------------------------
         
         //Composição das mensagens sonares (Range):
-        uint32_t sequencia_sonar = valores[18];
+        uint32_t sequencia_sonar = valores[11];
         if (sequencia_sonar>ultima_seq_sonar){
             ultima_seq_sonar = sequencia_sonar;
 
@@ -331,7 +331,7 @@ class SerialSensorsNode : public rclcpp::Node
             sonarMsg4->max_range = max_range_sonar_;
             sonarMsg5->max_range = max_range_sonar_;
 
-            float range1 = (float) valores[20];
+            float range1 = (float) valores[13];
             if (range1<min_range_sonar_){
                 range1 = -std::numeric_limits<float>::infinity();
             } else if (range1>max_range_sonar_){
@@ -340,7 +340,7 @@ class SerialSensorsNode : public rclcpp::Node
                 sonarMsg1->range = range1;
             }
 
-            float range2 = (float) valores[21];
+            float range2 = (float) valores[14];
             if (range2<min_range_sonar_){
                 range2 = -std::numeric_limits<float>::infinity();
             } else if (range1>max_range_sonar_){
@@ -349,7 +349,7 @@ class SerialSensorsNode : public rclcpp::Node
                 sonarMsg2->range = range2;
             }
 
-            float range3 = (float) valores[22];
+            float range3 = (float) valores[15];
             if (range3<min_range_sonar_){
                 range3 = -std::numeric_limits<float>::infinity();
             } else if (range1>max_range_sonar_){
@@ -358,7 +358,7 @@ class SerialSensorsNode : public rclcpp::Node
                 sonarMsg3->range = range3;
             }
 
-            float range4 = (float) valores[23];
+            float range4 = (float) valores[16];
             if (range4<min_range_sonar_){
                 range4 = -std::numeric_limits<float>::infinity();
             } else if (range1>max_range_sonar_){
@@ -367,7 +367,7 @@ class SerialSensorsNode : public rclcpp::Node
                 sonarMsg4->range = range4;
             }
 
-            float range5 = (float) valores[24];
+            float range5 = (float) valores[17];
             if (range5<min_range_sonar_){
                 range5 = -std::numeric_limits<float>::infinity();
             } else if (range5>max_range_sonar_){
@@ -376,7 +376,7 @@ class SerialSensorsNode : public rclcpp::Node
                 sonarMsg5->range = range5;
             }
 
-            int64_t micros_esp_sonares = (int64_t) valores[19];
+            int64_t micros_esp_sonares = (int64_t) valores[12];
             int64_t timestamp_sonares_ns = micros_esp_sonares*1000LL + offset_clocks_ns;
 
             sonarMsg1->header.stamp = rclcpp::Time(timestamp_sonares_ns);
