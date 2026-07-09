@@ -199,7 +199,7 @@ class SerialMotorsNode : public rclcpp::Node
 
             int64_t micros_esp_encoders = (int64_t) valores[1];
             int64_t timestamp_encoders_ns = micros_esp_encoders*1000LL + offset_clocks_ns;
-            encodersMsg->header.stamp = rclcpp::Time(timestamp_encoders_ns);
+            encoderMsg->header.stamp = rclcpp::Time(timestamp_encoders_ns);
 
             try{
                 encoders_pub_->publish(*encoderMsg);
@@ -208,9 +208,9 @@ class SerialMotorsNode : public rclcpp::Node
     
     }
     
-    void CommandSubEsq_callback(geometry_msgs::msg::Twist msg)
+    void CommandSubEsq_callback(float msg)
     {
-        const std::string rpm_ref_esq_s = std::to_string(msg->float);
+        const std::string rpm_ref_esq_s = std::to_string(msg);
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
@@ -219,9 +219,9 @@ class SerialMotorsNode : public rclcpp::Node
         bytes_escritos += serial_.write(linebreak);
     }
 
-    void CommandSubDir_callback(geometry_msgs::msg::Twist msg)
+    void CommandSubDir_callback(float msg)
     {
-        const std::string rpm_ref_dir_s = std::to_string(msg->float);
+        const std::string rpm_ref_dir_s = std::to_string(msg);
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 

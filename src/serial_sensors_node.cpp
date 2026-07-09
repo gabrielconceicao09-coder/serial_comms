@@ -168,7 +168,7 @@ class SerialSensorsNode : public rclcpp::Node
 
         if (valores.size() != 25) //TODO: CORRIGIR PARA NÚMERO CERTO DE VALORES
         {
-            RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %i", line.c_str(), valores.size());
+            RCLCPP_INFO(this->get_logger(), "Leitura de número errado de valores. Linha: %s, n de valores: %li", line.c_str(), valores.size());
             return; 
         }
         //----------------------------------------------------------------------------
