@@ -215,9 +215,9 @@ class SerialMotorsNode : public rclcpp::Node
     
     }
     
-    void CommandSubEsq_callback(std_msgs::msg::Float32 msg)
+    void CommandSubEsq_callback(const std_msgs::msg::Float32::SharedPtr msg)
     {
-        const std::string rpm_ref_esq_s = std::to_string(msg.data);
+        const std::string rpm_ref_esq_s = std::to_string(msg->data);
         const std::string marcador_esq = "E:";
         const std::string linebreak = "\n";
 
@@ -226,9 +226,9 @@ class SerialMotorsNode : public rclcpp::Node
         bytes_escritos += serial_.write(linebreak);
     }
 
-    void CommandSubDir_callback(std_msgs::msg::Float32 msg)
+    void CommandSubDir_callback(std_msgs::msg::Float32::SharedPtr msg)
     {
-        const std::string rpm_ref_dir_s = std::to_string(msg.data);
+        const std::string rpm_ref_dir_s = std::to_string(msg->data);
         const std::string marcador_dir = "D:";
         const std::string linebreak = "\n";
 
