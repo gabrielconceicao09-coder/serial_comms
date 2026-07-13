@@ -151,13 +151,13 @@ class SerialMotorsNode : public rclcpp::Node
         rclcpp::Time tempo_ros = rclcpp::Clock(RCL_SYSTEM_TIME).now();
             
         //Composição mensagem Twist dos encoders:
-        uint32_t micros_esp_encoders = (uint32_t) valores[0];
         uint32_t sequencia_encoders = (uint32_t) valores[1];
     
         if (sequencia_encoders>ultima_seq_encoders){
             ultima_seq_encoders = sequencia_encoders;
 
             //Composição do tempo de aquisição no relógio do sistema:
+            uint32_t micros_esp_encoders = (uint32_t) valores[0];
             if (primeira_leitura){
                 offset_clocks_ns = tempo_ros.nanoseconds() - micros_esp_encoders*1000LL;
                 primeira_leitura = false;
@@ -204,8 +204,7 @@ class SerialMotorsNode : public rclcpp::Node
             encoderMsg->twist.covariance[32] = 0.0; encoderMsg->twist.covariance[33] = 0.0; encoderMsg->twist.covariance[34] = 0.0;
             encoderMsg->twist.covariance[35] = variancia_encoders_;
 
-            int64_t micros_esp_encoders = (int64_t) valores[1];
-            int64_t timestamp_encoders_ns = micros_esp_encoders*1000LL + offset_clocks_ns;
+            int64_t timestamp_encoders_ns = (int64_t) micros_esp_encoders*1000LL + offset_clocks_ns;
             encoderMsg->header.stamp = rclcpp::Time(timestamp_encoders_ns);
 
             try{
