@@ -40,16 +40,16 @@ add_executable(serial_sensors_node
 	src/impl/list_ports/list_ports_osx.cc
 	src/impl/list_ports/list_ports_win.cc
 )
-##target_link_libraries(serial_sensors_node PUBLIC #para rodar no foxy
-##rclcpp::rclcpp
-##sensor_msgs
-##geometry_msgs
-##)
-ament_target_dependencies(serial_sensors_node #para rodar no kilted
-rclcpp
+target_link_libraries(serial_sensors_node PUBLIC #para rodar no foxy
+rclcpp::rclcpp
 sensor_msgs
 geometry_msgs
 )
+#ament_target_dependencies(serial_sensors_node #para rodar no kilted
+#rclcpp
+#sensor_msgs
+#geometry_msgs
+#)
 
 add_executable(serial_motors_node
 	src/serial_motors_node.cpp
@@ -60,16 +60,16 @@ add_executable(serial_motors_node
 	src/impl/list_ports/list_ports_osx.cc
 	src/impl/list_ports/list_ports_win.cc
 )
-##target_link_libraries(serial_motors_node PUBLIC #para rodar no foxy
-##rclcpp::rclcpp
-##sensor_msgs
-##geometry_msgs
-##)
-ament_target_dependencies(serial_motors_node #para rodar no kilted
-rclcpp
+target_link_libraries(serial_motors_node PUBLIC #para rodar no foxy
+rclcpp::rclcpp
 sensor_msgs
 geometry_msgs
 )
+#ament_target_dependencies(serial_motors_node #para rodar no kilted
+#rclcpp
+#sensor_msgs
+#geometry_msgs
+#)
 
 add_executable(image_restamper_node
   src/image_restamper_node.cpp
